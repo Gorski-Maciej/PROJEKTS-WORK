@@ -1,0 +1,12 @@
+trigger: "anomaly_score < -0.2 AND syn_flood == true"
+actions:
+  - type: "block_ip"
+    params:
+      duration: 600
+  - type: "deploy_honeypot"
+    params:
+      port: 80
+  - type: "notify_slack"
+    params:
+      channel: "#incidents"
+      message: "Blocked {{ src_ip }} due to DDoS anomaly"
