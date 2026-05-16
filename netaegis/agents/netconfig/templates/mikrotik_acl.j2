@@ -1,0 +1,4 @@
+/ip firewall filter
+add chain=input src-address={{ admin_ip }} action=accept comment="Admin"
+add chain=input protocol=tcp dst-port=22 action=accept comment="SSH"
+add chain=input action=drop comment="Default deny"

@@ -1,0 +1,6 @@
+body { font-family: Inter, Arial, sans-serif; margin: 0; background: #0f172a; color: #e2e8f0; }
+a { color: #38bdf8; margin-right: 12px; }
+main { padding: 16px; }
+table { border-collapse: collapse; width: 100%; background: #1e293b; }
+th, td { padding: 8px; border-bottom: 1px solid #334155; text-align: left; }
+button { background: #22c55e; color: #0f172a; border: 0; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
