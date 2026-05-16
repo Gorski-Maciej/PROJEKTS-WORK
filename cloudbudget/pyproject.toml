@@ -23,4 +23,4 @@ dependencies = [
 ]
 
 [tool.pytest.ini_options]
-pythonpath = ["cloudbudget"]
+pythonpath = ["."]

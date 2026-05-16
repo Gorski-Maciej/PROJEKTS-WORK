@@ -1,0 +1,20 @@
+{
+  "title": "CloudBudget Overview",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "HTTP Requests / sec",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [{"expr": "rate(cloudbudget_http_requests_total[5m])", "refId": "A"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "API latency p95",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [{"expr": "histogram_quantile(0.95, sum(rate(cloudbudget_http_request_duration_seconds_bucket[5m])) by (le))", "refId": "A"}]
+    }
+  ]
+}
