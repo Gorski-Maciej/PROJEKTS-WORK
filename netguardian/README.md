@@ -25,6 +25,19 @@ flowchart LR
    cp .env.example .env
    ```
 2. Uzupełnij sekrety (minimum: AbuseIPDB/Slack opcjonalne, MISP opcjonalny).
+3. Przygotuj klucze SSH automatycznie:
+   ```bash
+   ./scripts/setup_local_prereqs.sh
+   ```
+4. Dodaj plik GeoIP ręcznie:
+   - `engine/ssh/id_rsa`
+   - `agent/authorized_keys`
+   - `engine/data/GeoLite2-City.mmdb`
+5. Zweryfikuj wymagane pliki runtime:
+   ```bash
+   ./scripts/validate_runtime_prereqs.sh
+   ```
+6. Uruchom:
 3. Dodaj pliki kluczy i GeoIP:
    - `engine/ssh/id_rsa`
    - `agent/authorized_keys`
