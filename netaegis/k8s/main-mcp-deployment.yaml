@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netaegis-main-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: netaegis-main-mcp }
+  template:
+    metadata:
+      labels: { app: netaegis-main-mcp }
+    spec:
+      containers:
+        - name: main-mcp
+          image: netaegis-main:latest
+          ports:
+            - containerPort: 8000
