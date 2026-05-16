@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg14
+    environment:
+      POSTGRES_PASSWORD: netguardian
+      POSTGRES_DB: netguardian
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+
+  duckdb-api:
+    image: datadiverdev/duckdb-http:latest
+    ports:
+      - "4213:4213"
+    volumes:
+      - duckdb_data:/data
+
+  engine:
+    build: ./engine
+    depends_on:
+      - kafka
+      - redis
+      - timescaledb
+      - duckdb-api
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      REDIS_HOST: redis
+      DATABASE_URL: postgresql://postgres:netguardian@timescaledb:5432/netguardian
+      DUCKDB_PATH: /data/netguardian.db
+      ABUSEIPDB_API_KEY: ${ABUSEIPDB_API_KEY}
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
+      SSH_PRIVATE_KEY_FILE: /app/ssh/id_rsa
+      SSH_AGENT_HOST: agent
+      SSH_AGENT_USER: root
+    ports:
+      - "8000:8000"
+      - "8001:8000"
+    volumes:
+      - ./engine:/app
+      - duckdb_data:/data
+
+  agent:
+    build: ./agent
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      AGENT_ID: agent-01
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+
+  dashboard:
+    build: ./dashboard
+    depends_on:
+      - engine
+    ports:
+      - "8080:8080"
+    environment:
+      ENGINE_WS_URL: ws://engine:8000/ws
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+
+volumes:
+  timescale_data:
+  duckdb_data:
