@@ -1,0 +1,45 @@
+version: '3.9'
+services:
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://cloudbudget:cloudbudget@postgres:5432/cloudbudget
+      REDIS_URL: redis://redis:6379/0
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672//
+    ports: ["8000:8000"]
+    depends_on: [postgres, redis, rabbitmq]
+
+  worker:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    command: celery -A api.core.celery_app.celery_app worker -Q cost.ingest,cost.analyze,action.exec --loglevel=INFO
+    environment:
+      DATABASE_URL: postgresql+psycopg://cloudbudget:cloudbudget@postgres:5432/cloudbudget
+      REDIS_URL: redis://redis:6379/0
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672//
+    depends_on: [postgres, redis, rabbitmq]
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: cloudbudget
+      POSTGRES_USER: cloudbudget
+      POSTGRES_PASSWORD: cloudbudget
+    ports: ["5432:5432"]
+
+  redis:
+    image: redis:7
+    ports: ["6379:6379"]
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports: ["5672:5672", "15672:15672"]
+
+  frontend:
+    build:
+      context: ./frontend
+    ports: ["3000:3000"]
+    depends_on: [api]

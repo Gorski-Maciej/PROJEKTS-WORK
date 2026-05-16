@@ -1,0 +1,26 @@
+[project]
+name = "cloudbudget"
+version = "2.0.0"
+description = "Self-hosted FinOps platform"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.116.0",
+  "uvicorn>=0.35.0",
+  "pydantic>=2.11.0",
+  "sqlalchemy>=2.0.0",
+  "psycopg[binary]>=3.2.0",
+  "alembic>=1.16.0",
+  "celery>=5.5.0",
+  "redis>=6.2.0",
+  "duckdb>=1.3.0",
+  "polars>=1.31.0",
+  "prophet>=1.1.7",
+  "scikit-learn>=1.7.0",
+  "prometheus-client>=0.22.0",
+  "python-jose[cryptography]>=3.3.0",
+  "passlib[bcrypt]>=1.7.4",
+  "strawberry-graphql[fastapi]>=0.275.0"
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["cloudbudget"]
