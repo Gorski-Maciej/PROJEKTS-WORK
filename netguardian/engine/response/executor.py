@@ -28,6 +28,32 @@ def get_honeypot_manager():
     return _honeypot_manager
 
 
+
+
+def _normalize_trigger_expression(expr: str) -> str:
+    return expr.replace('AND', 'and').replace('OR', 'or').replace('true', 'True').replace('false', 'False')
+
+
+def _extract_trigger_context(score: float, features: list) -> dict:
+    text = ' '.join(str(f).lower() for f in (features or []))
+    return {
+        'anomaly_score': score,
+        'syn_flood': 'syn' in text and ('flood' in text or 'ddos' in text),
+    }
+
+
+def should_execute_playbook(playbook: dict, context: dict) -> bool:
+    expr = playbook.get('trigger')
+    if not expr:
+        return True
+    safe_expr = _normalize_trigger_expression(str(expr))
+    try:
+        return bool(eval(safe_expr, {'__builtins__': {}}, context))
+    except Exception as exc:  # noqa: BLE001
+        logger.error('Invalid playbook trigger %r: %s', expr, exc)
+        return False
+
+
 async def trigger_alert(redis_client: redis.Redis, src_ip: str, score: float, features: list, threat_intel: bool = False):
     alert = {
         'timestamp': time.time(),
@@ -47,7 +73,11 @@ async def trigger_alert(redis_client: redis.Redis, src_ip: str, score: float, fe
     await scorer.add_event(src_ip, 'alert')
 
     playbook = load_playbook('ddos.yml')
-    await execute_playbook(redis_client, src_ip, playbook)
+    context = _extract_trigger_context(score, features)
+    if should_execute_playbook(playbook, context):
+        await execute_playbook(redis_client, src_ip, playbook)
+    else:
+        logger.info('Playbook trigger not matched for %s with context %s', src_ip, context)
 
 
 def load_playbook(name: str):

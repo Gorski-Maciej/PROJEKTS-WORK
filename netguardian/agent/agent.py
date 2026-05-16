@@ -8,6 +8,7 @@ from confluent_kafka import Producer
 KAFKA_BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
 AGENT_ID = os.getenv("AGENT_ID", "agent-01")
 TOPIC = "netguardian.raw_flows"
+HEARTBEAT_TOPIC = "netguardian.heartbeats"
 
 producer = Producer({"bootstrap.servers": KAFKA_BOOTSTRAP})
 
@@ -46,10 +47,17 @@ def simulate_attack() -> list[dict]:
 
 if __name__ == "__main__":
     print(f"Agent {AGENT_ID} starting...")
+    last_heartbeat = 0.0
     while True:
         flow = generate_flow()
         producer.produce(TOPIC, json.dumps(flow).encode())
         producer.poll(0)
+
+        now = time.time()
+        if now - last_heartbeat >= 15:
+            heartbeat = {"agent_id": AGENT_ID, "timestamp": now}
+            producer.produce(HEARTBEAT_TOPIC, json.dumps(heartbeat).encode())
+            last_heartbeat = now
 
         if random.random() < 0.1:
             print("Simulating attack...")

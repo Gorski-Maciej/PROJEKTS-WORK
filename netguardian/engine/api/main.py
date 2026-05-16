@@ -12,9 +12,11 @@ from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
 from api.auth import USERS, create_access_token, require_role
+from consumer.heartbeat_consumer import start_heartbeat_consumer
 from consumer.kafka_consumer import start_kafka_consumer
 from detection.beacon_detector import BeaconDetector
 from detection.window_analyzer import analyze_window
+from metrics import setup_metrics, update_agent_gauge
 from report.generator import generate_report
 from threat_intel.misp_sync import sync_blacklist
 
@@ -77,9 +79,11 @@ async def lifespan(app: FastAPI):
     beacon_detector = BeaconDetector(redis_client)
 
     asyncio.create_task(start_kafka_consumer(redis_client, db_pool, duck_con, beacon_detector))
+    asyncio.create_task(start_heartbeat_consumer(redis_client))
     asyncio.create_task(periodic_analysis())
     asyncio.create_task(periodic_beacon_analysis())
     asyncio.create_task(periodic_misp_sync())
+    asyncio.create_task(periodic_metrics_update())
     yield
 
     await db_pool.close()
@@ -88,6 +92,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+setup_metrics(app)
 
 
 @app.post('/token')
@@ -145,3 +150,10 @@ async def periodic_analysis():
     while True:
         await asyncio.sleep(10)
         await analyze_window(redis_client)
+
+
+async def periodic_metrics_update():
+    while True:
+        await asyncio.sleep(15)
+        if redis_client:
+            await update_agent_gauge(redis_client)
