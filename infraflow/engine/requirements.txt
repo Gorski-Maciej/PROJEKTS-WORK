@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+redis
+asyncpg
+apscheduler
+asyncssh
+pyyaml
+PyJWT
+aiohttp
+prometheus-client
+prometheus-fastapi-instrumentator
+pytest
+pytest-asyncio
+pydantic
