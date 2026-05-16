@@ -5,6 +5,11 @@ services:
       dockerfile: server/main_mcp/Dockerfile
     ports:
       - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/realtime/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
 
   operational_mcp:
     build:
@@ -12,8 +17,16 @@ services:
       dockerfile: server/operational_mcp/Dockerfile
     ports:
       - "8001:8001"
+    environment:
+      MAIN_MCP_URL: http://main_mcp:8000
     depends_on:
-      - main_mcp
+      main_mcp:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/api/status/', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
 
   frontend:
     build:
@@ -22,4 +35,60 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - main_mcp
+      main_mcp:
+        condition: service_healthy
+
+  netpulse_agent:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: >
+      sh -c "pip install --no-cache-dir -r agents/netpulse/requirements.txt &&
+             python -m agents.netpulse.agent"
+    environment:
+      OPERATIONAL_MCP_URL: http://operational_mcp:8001
+      NETPULSE_AGENT_ID: netpulse-01
+      NETPULSE_INTERVAL: "30"
+    depends_on:
+      operational_mcp:
+        condition: service_healthy
+    restart: unless-stopped
+
+  seclog_agent:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app
+      - /var/log:/var/log:ro
+    command: >
+      sh -c "pip install --no-cache-dir -r agents/seclog/requirements.txt &&
+             python -m agents.seclog.agent"
+    environment:
+      OPERATIONAL_MCP_URL: http://operational_mcp:8001
+      SECLOG_AGENT_ID: seclog-01
+      SECLOG_WATCH_PATHS: /var/log/auth.log,/var/log/nginx/access.log
+    depends_on:
+      operational_mcp:
+        condition: service_healthy
+    restart: unless-stopped
+
+  netconfig_agent:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: >
+      sh -c "pip install --no-cache-dir -r agents/netconfig/requirements.txt &&
+             python -m agents.netconfig.agent"
+    environment:
+      OPERATIONAL_MCP_URL: http://operational_mcp:8001
+      NETCONFIG_AGENT_ID: netconfig-01
+      NETCONFIG_LOCAL_REPO: /app/.agent-configs
+      NETCONFIG_DEVICE_IP: 192.168.1.1
+      NETCONFIG_DEVICE_USERNAME: admin
+      NETCONFIG_DEVICE_PASSWORD: admin
+    depends_on:
+      operational_mcp:
+        condition: service_healthy
+    restart: unless-stopped
