@@ -5,7 +5,7 @@ import jwt
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 
-SECRET_KEY = os.getenv("JWT_SECRET", "supersecret")
+SECRET_KEY = os.getenv("JWT_SECRET", "change-me-netguardian-jwt-secret-min-32-bytes")
 ALGORITHM = "HS256"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 

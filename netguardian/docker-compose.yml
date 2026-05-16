@@ -34,20 +34,14 @@ services:
     volumes:
       - timescale_data:/var/lib/postgresql/data
 
-  duckdb-api:
-    image: datadiverdev/duckdb-http:latest
-    ports:
-      - "4213:4213"
-    volumes:
-      - duckdb_data:/data
 
   engine:
     build: ./engine
+    working_dir: /app
     depends_on:
       - kafka
       - redis
       - timescaledb
-      - duckdb-api
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       REDIS_HOST: redis
@@ -55,14 +49,20 @@ services:
       DUCKDB_PATH: /data/netguardian.db
       ABUSEIPDB_API_KEY: ${ABUSEIPDB_API_KEY}
       SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
+      MISP_URL: ${MISP_URL}
+      MISP_KEY: ${MISP_KEY}
       SSH_PRIVATE_KEY_FILE: /app/ssh/id_rsa
       SSH_AGENT_HOST: agent
       SSH_AGENT_USER: root
+      GEOIP_DB: /app/data/GeoLite2-City.mmdb
     ports:
       - "8000:8000"
       - "8001:8000"
     volumes:
       - ./engine:/app
+      - ./engine/ssh:/app/ssh:ro
+      - ./engine/data:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock
       - duckdb_data:/data
 
   agent:
@@ -72,6 +72,8 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       AGENT_ID: agent-01
+    volumes:
+      - ./agent/authorized_keys:/root/.ssh/authorized_keys:ro
     cap_add:
       - NET_ADMIN
       - NET_RAW
@@ -96,6 +98,10 @@ services:
     image: grafana/grafana
     ports:
       - "3000:3000"
+    volumes:
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
 

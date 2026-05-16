@@ -22,3 +22,5 @@ python-multipart
 docker
 scipy
 geoip2
+prometheus-fastapi-instrumentator
+prometheus-client
