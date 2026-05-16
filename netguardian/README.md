@@ -38,6 +38,11 @@ flowchart LR
    ./scripts/validate_runtime_prereqs.sh
    ```
 6. Uruchom:
+3. Dodaj pliki kluczy i GeoIP:
+   - `engine/ssh/id_rsa`
+   - `agent/authorized_keys`
+   - `engine/data/GeoLite2-City.mmdb`
+4. Uruchom:
    ```bash
    docker compose up --build
    ```
