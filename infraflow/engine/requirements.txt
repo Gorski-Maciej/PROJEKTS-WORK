@@ -12,3 +12,8 @@ prometheus-fastapi-instrumentator
 pytest
 pytest-asyncio
 pydantic
+
+numpy
+scikit-learn
+
+pywinrm==0.4.3

@@ -62,3 +62,4 @@ services:
 
 volumes:
   timescale_data:
+    driver: local

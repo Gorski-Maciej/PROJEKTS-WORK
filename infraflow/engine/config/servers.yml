@@ -20,3 +20,15 @@ servers:
           - type: clean_logs
             path: /var/log
             condition: "memory > 95"
+
+      - type: package_updates
+        params:
+          manager: apt
+        threshold: 10
+        actions:
+          - type: auto_patch
+            params:
+              manager: apt
+            condition: "available_updates > 10"
+          - type: send_slack
+            message: "Server {server.name} has {metric} pending updates"
