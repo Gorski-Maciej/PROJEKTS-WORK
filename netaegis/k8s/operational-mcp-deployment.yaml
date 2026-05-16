@@ -15,3 +15,18 @@ spec:
           image: netaegis-operational:latest
           ports:
             - containerPort: 8001
+          env:
+            - name: MAIN_MCP_URL
+              value: http://netaegis-main-mcp:8000
+          readinessProbe:
+            httpGet:
+              path: /api/status/
+              port: 8001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/status/
+              port: 8001
+            initialDelaySeconds: 15
+            periodSeconds: 20

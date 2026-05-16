@@ -1,30 +1,59 @@
 import asyncio
+import os
+from pathlib import Path
+
 import httpx
-from agents.seclog.parsers.auth import parse_line as parse_auth
-from agents.seclog.parsers.nginx import parse_line as parse_nginx
+from watchfiles import awatch
 
-OPERATIONAL_MCP_URL = "http://localhost:8001"
-AGENT_ID = "seclog-01"
+from .parsers import auth, nginx
 
-SAMPLES = [
-    "Failed password for root from 10.0.0.2 port 22 ssh2",
-    "127.0.0.1 - - [12/Jan/2026] \"GET /health HTTP/1.1\" 503 123",
+OPERATIONAL_MCP_URL = os.getenv("OPERATIONAL_MCP_URL", "http://localhost:8001")
+AGENT_ID = os.getenv("SECLOG_AGENT_ID", "seclog-01")
+WATCH_PATHS = [
+    p.strip() for p in os.getenv("SECLOG_WATCH_PATHS", "/var/log/auth.log,/var/log/nginx/access.log").split(",") if p.strip()
 ]
 
+PARSERS = {
+    "auth.log": auth.parse_line,
+    "nginx": nginx.parse_line,
+}
 
-async def send_event(event: dict):
-    async with httpx.AsyncClient() as client:
+
+def get_parser_for_path(path: str):
+    for key, parser in PARSERS.items():
+        if key in path:
+            return parser
+    return None
+
+
+async def send_log_event(event_type: str, details: dict):
+    async with httpx.AsyncClient(timeout=10) as client:
         await client.post(
             f"{OPERATIONAL_MCP_URL}/api/agents/logs",
-            json={"agent_id": AGENT_ID, "type": event["type"], "details": event["details"]},
+            json={"agent_id": AGENT_ID, "type": event_type, "details": details},
         )
 
 
 async def main():
-    for line in SAMPLES:
-        event = parse_auth(line) or parse_nginx(line)
-        if event:
-            await send_event(event)
+    print(f"[{AGENT_ID}] watching: {WATCH_PATHS}")
+    async for changes in awatch(*WATCH_PATHS):
+        for _change_type, path in changes:
+            parser = get_parser_for_path(path)
+            if parser is None:
+                continue
+            p = Path(path)
+            if not p.exists():
+                continue
+            try:
+                lines = p.read_text().splitlines()
+                if not lines:
+                    continue
+                event = parser(lines[-1])
+                if event:
+                    await send_log_event(event["type"], event["details"])
+                    print(f"[{AGENT_ID}] event: {event['type']}")
+            except Exception as exc:
+                print(f"[{AGENT_ID}] read error {path}: {exc}")
 
 
 if __name__ == "__main__":

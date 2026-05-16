@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netaegis-netpulse-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: netaegis-netpulse-agent }
+  template:
+    metadata:
+      labels: { app: netaegis-netpulse-agent }
+    spec:
+      containers:
+        - name: netpulse-agent
+          image: python:3.12-slim
+          workingDir: /app
+          command: ["sh", "-c", "pip install --no-cache-dir -r agents/netpulse/requirements.txt && python -m agents.netpulse.agent"]
+          env:
+            - name: OPERATIONAL_MCP_URL
+              value: http://netaegis-operational-mcp:8001
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netaegis-seclog-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: netaegis-seclog-agent }
+  template:
+    metadata:
+      labels: { app: netaegis-seclog-agent }
+    spec:
+      containers:
+        - name: seclog-agent
+          image: python:3.12-slim
+          workingDir: /app
+          command: ["sh", "-c", "pip install --no-cache-dir -r agents/seclog/requirements.txt && python -m agents.seclog.agent"]
+          env:
+            - name: OPERATIONAL_MCP_URL
+              value: http://netaegis-operational-mcp:8001
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netaegis-netconfig-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: netaegis-netconfig-agent }
+  template:
+    metadata:
+      labels: { app: netaegis-netconfig-agent }
+    spec:
+      containers:
+        - name: netconfig-agent
+          image: python:3.12-slim
+          workingDir: /app
+          command: ["sh", "-c", "pip install --no-cache-dir -r agents/netconfig/requirements.txt && python -m agents.netconfig.agent"]
+          env:
+            - name: OPERATIONAL_MCP_URL
+              value: http://netaegis-operational-mcp:8001
