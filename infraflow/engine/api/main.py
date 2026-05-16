@@ -47,6 +47,9 @@ async def token(form_data: OAuth2PasswordRequestForm = Depends()) -> dict[str, s
         TOKEN_ATTEMPTS[form_data.username] = attempts
         raise HTTPException(status_code=401, detail='invalid credentials')
     TOKEN_ATTEMPTS[form_data.username] = []
+    u = USERS.get(form_data.username)
+    if not u or u['password'] != form_data.password:
+        raise HTTPException(status_code=401, detail='invalid credentials')
     return {'access_token': create_access_token({'sub': form_data.username, 'role': u['role']}), 'token_type': 'bearer'}
 
 
