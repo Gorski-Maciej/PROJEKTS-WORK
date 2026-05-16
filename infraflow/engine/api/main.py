@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import time
 from pathlib import Path
 
 import asyncpg
@@ -21,6 +22,7 @@ from scheduler.jobs import setup_scheduler
 
 app = FastAPI(title='InfraFlow API')
 state: dict[str, object] = {'redis': None, 'db': None}
+TOKEN_ATTEMPTS: dict[str, list[float]] = {}
 
 
 @app.on_event('startup')
@@ -34,6 +36,17 @@ async def startup() -> None:
 
 @app.post('/token')
 async def token(form_data: OAuth2PasswordRequestForm = Depends()) -> dict[str, str]:
+    now = time.time()
+    attempts = [t for t in TOKEN_ATTEMPTS.get(form_data.username, []) if now - t < 60]
+    if len(attempts) >= 5:
+        raise HTTPException(status_code=429, detail='too many login attempts')
+
+    u = USERS.get(form_data.username)
+    if not u or u['password'] != form_data.password:
+        attempts.append(now)
+        TOKEN_ATTEMPTS[form_data.username] = attempts
+        raise HTTPException(status_code=401, detail='invalid credentials')
+    TOKEN_ATTEMPTS[form_data.username] = []
     u = USERS.get(form_data.username)
     if not u or u['password'] != form_data.password:
         raise HTTPException(status_code=401, detail='invalid credentials')

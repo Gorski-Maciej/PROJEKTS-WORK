@@ -45,3 +45,9 @@ WebSocket (`/ws`) streamuje zdarzenia z kanału Redis `server_updates`.
 3. Sprawdź połączenie do TimescaleDB/Redis przez `docker compose up --build`.
 
 Grafana dashboard jest dostępny w repo: `grafana/dashboards/infraflow-dashboard.json`.
+
+
+## Znane ograniczenia
+- WinRM obecnie wspiera NTLM; Kerberos/CredSSP niezaimplementowane.
+- `infraflow:dlq` przechowuje błędne joby, ale brak jeszcze automatycznego replay.
+- Brak TLS/rate limiting poza prostym limitem logowań `/token`.

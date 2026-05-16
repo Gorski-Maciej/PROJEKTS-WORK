@@ -37,6 +37,10 @@ async def process_queue() -> None:
         server = cfg.get(data.get('server'))
         if not server:
             continue
+        try:
+            await process_job({'server': server}, RepairContext(db_pool=db_pool, redis=r))
+        except Exception as exc:
+            await r.rpush('infraflow:dlq', json.dumps({'server': server.get('name'), 'payload': data, 'error': str(exc)}))
         await process_job({'server': server}, RepairContext(db_pool=db_pool, redis=r))
 
 

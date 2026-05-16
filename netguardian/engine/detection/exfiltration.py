@@ -32,4 +32,5 @@ class ExfiltrationDetector:
             }
             logger.warning('Potential exfiltration detected: %s', alert)
             await self.redis.rpush('alerts_list', json.dumps(alert))
+            await self.redis.ltrim('alerts_list', -1000, -1)
             await self.redis.publish('alerts', json.dumps(alert))
