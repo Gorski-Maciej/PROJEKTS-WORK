@@ -1,0 +1,13 @@
+groups:
+  - name: cloudbudget-alerts
+    rules:
+      - alert: BudgetWarning
+        expr: cloudbudget_budget_utilization_pct > 80
+        for: 5m
+        labels:
+          severity: warning
+      - alert: BudgetCritical
+        expr: cloudbudget_budget_utilization_pct > 120
+        for: 2m
+        labels:
+          severity: critical

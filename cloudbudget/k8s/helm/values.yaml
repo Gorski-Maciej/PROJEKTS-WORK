@@ -1,0 +1,11 @@
+replicaCount: 2
+image:
+  repository: cloudbudget/api
+  tag: latest
+service:
+  type: ClusterIP
+  port: 8000
+env:
+  DATABASE_URL: postgresql+psycopg://cloudbudget:cloudbudget@postgres:5432/cloudbudget
+  REDIS_URL: redis://redis:6379/0
+  RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672//
