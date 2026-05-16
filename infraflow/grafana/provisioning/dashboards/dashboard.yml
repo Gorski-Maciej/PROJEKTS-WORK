@@ -1,0 +1,7 @@
+apiVersion: 1
+providers:
+  - name: InfraFlow
+    folder: InfraFlow
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards

@@ -1,0 +1,1 @@
+{"title":"InfraFlow Overview","panels":[{"type":"timeseries","title":"Incidents","targets":[{"expr":"infraflow_incidents_total"}]}],"schemaVersion":39,"version":1}

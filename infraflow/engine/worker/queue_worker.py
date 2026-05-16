@@ -1,0 +1,37 @@
+from __future__ import annotations
+
+import asyncio
+import json
+import os
+
+import asyncpg
+import redis.asyncio as redis
+
+from core.config_loader import load_config
+from core.context import RepairContext
+from worker.executor import execute_checks_for_server
+
+
+async def process_queue() -> None:
+    redis_host = os.getenv('REDIS_HOST', 'localhost')
+    db_url = os.getenv('DATABASE_URL', 'postgresql://postgres:infraflow@localhost:5432/infraflow')
+
+    r = redis.Redis(host=redis_host, decode_responses=True)
+    db_pool = await asyncpg.create_pool(db_url)
+    cfg = {s['name']: s for s in load_config().get('servers', [])}
+
+    while True:
+        item = await r.blpop('infraflow:jobs', timeout=5)
+        if not item:
+            await asyncio.sleep(0.1)
+            continue
+        _, payload = item
+        data = json.loads(payload)
+        server = cfg.get(data.get('server'))
+        if not server:
+            continue
+        await execute_checks_for_server(server, RepairContext(db_pool=db_pool, redis=r))
+
+
+if __name__ == '__main__':
+    asyncio.run(process_queue())
