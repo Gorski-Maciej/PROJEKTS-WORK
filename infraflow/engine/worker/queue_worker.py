@@ -12,6 +12,13 @@ from core.context import RepairContext
 from worker.executor import execute_checks_for_server
 
 
+async def process_job(job: dict, ctx: RepairContext) -> None:
+    server = job.get('server')
+    if not server:
+        return
+    await execute_checks_for_server(server, ctx)
+
+
 async def process_queue() -> None:
     redis_host = os.getenv('REDIS_HOST', 'localhost')
     db_url = os.getenv('DATABASE_URL', 'postgresql://postgres:infraflow@localhost:5432/infraflow')
@@ -30,7 +37,10 @@ async def process_queue() -> None:
         server = cfg.get(data.get('server'))
         if not server:
             continue
-        await execute_checks_for_server(server, RepairContext(db_pool=db_pool, redis=r))
+        try:
+            await process_job({'server': server}, RepairContext(db_pool=db_pool, redis=r))
+        except Exception as exc:
+            await r.rpush('infraflow:dlq', json.dumps({'server': server.get('name'), 'payload': data, 'error': str(exc)}))
 
 
 if __name__ == '__main__':

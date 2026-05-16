@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import Optional, Tuple
 
 
@@ -24,6 +25,7 @@ async def run_ssh(host: str, command: str, username: str = 'root', key_file: Opt
             client_keys=[key_file] if key_file else None,
             password=password,
             known_hosts=None,
+            connect_timeout=float(os.getenv('SSH_CONNECT_TIMEOUT', '10')),
         ) as conn:
             result = await conn.run(command, check=False)
             return result.stdout.strip(), result.stderr.strip(), result.exit_status

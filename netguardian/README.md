@@ -129,3 +129,9 @@ Gotowe skrypty i scenariusze:
 - Endpoint: `GET /report` (wymaga tokenu).
 - Generator: `engine/report/generator.py`.
 - Przykład: `curl -L http://localhost:8000/report -H "Authorization: Bearer <TOKEN>" -o netguardian_report.pdf`.
+
+
+## Znane ograniczenia
+- Wymagany ręczny plik GeoIP: `engine/data/GeoLite2-City.mmdb`.
+- Honeypot manager używa Docker socket (`/var/run/docker.sock`) i jest przeznaczony do środowisk dev/lab.
+- Agent generuje ruch symulowany; brak eBPF/nDPI w tej wersji.

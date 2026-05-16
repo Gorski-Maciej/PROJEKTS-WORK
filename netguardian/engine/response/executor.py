@@ -65,6 +65,7 @@ async def trigger_alert(redis_client: redis.Redis, src_ip: str, score: float, fe
     }
     logger.warning('Anomaly detected: %s', alert)
     await redis_client.rpush('alerts_list', json.dumps(alert))
+    await redis_client.ltrim('alerts_list', -1000, -1)
     await redis_client.publish('alerts', json.dumps(alert))
 
     correlator = EventCorrelator(redis_client)

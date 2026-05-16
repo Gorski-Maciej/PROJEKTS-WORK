@@ -21,9 +21,11 @@ docker compose up --build
 - GET `/health`
 - POST `/token`
 - GET `/servers`
+- GET `/servers/{server_name}/status`
 - POST `/servers/{server_name}/run-checks`
 - GET `/incidents`
 - GET `/metrics`
+- PUT `/config/servers` (admin, zapis + commit `engine/config/servers.yml`)
 
 ## UI i obserwowalność
 - Dashboard: http://localhost:8080
@@ -33,3 +35,19 @@ docker compose up --build
 - GET `/queue-depth`
 
 Scheduler odkłada zadania do Redis (`infraflow:jobs`), a dedykowany worker je konsumuje i wykonuje checki/akcje.
+
+WebSocket (`/ws`) streamuje zdarzenia z kanału Redis `server_updates`.
+
+
+## Lista kontrolna przed uruchomieniem
+1. Wygeneruj klucz SSH dla przykładowej konfiguracji: `bash scripts/setup_keys.sh`.
+2. Zmień hosty w `engine/config/servers.yml` na rzeczywiste serwery.
+3. Sprawdź połączenie do TimescaleDB/Redis przez `docker compose up --build`.
+
+Grafana dashboard jest dostępny w repo: `grafana/dashboards/infraflow-dashboard.json`.
+
+
+## Znane ograniczenia
+- WinRM obecnie wspiera NTLM; Kerberos/CredSSP niezaimplementowane.
+- `infraflow:dlq` przechowuje błędne joby, ale brak jeszcze automatycznego replay.
+- Brak TLS/rate limiting poza prostym limitem logowań `/token`.
