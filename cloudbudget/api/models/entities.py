@@ -49,4 +49,35 @@ class ActionLog(Base):
     action: Mapped[str] = mapped_column(String(60), index=True)
     resource_id: Mapped[str] = mapped_column(String(128), index=True)
     approved_by: Mapped[str] = mapped_column(String(120))
-    executed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    executed_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now())
+
+
+class ActionRequestLog(Base):
+    __tablename__ = "action_request_logs"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
+    action: Mapped[str] = mapped_column(String(60), index=True)
+    resource_id: Mapped[str] = mapped_column(String(128), index=True)
+    requested_by: Mapped[str] = mapped_column(String(120))
+    reason: Mapped[str] = mapped_column(Text, default="")
+    status: Mapped[str] = mapped_column(String(24), default="pending", index=True)
+    approved_by: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(), index=True)
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class User(Base):
+    __tablename__ = "users"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    username: Mapped[str] = mapped_column(String(120), unique=True, index=True)
+    password_hash: Mapped[str] = mapped_column(String(255))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class UserTenant(Base):
+    __tablename__ = "user_tenants"
+    __table_args__ = (UniqueConstraint("user_id", "tenant_id", name="uq_user_tenant"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
+    role: Mapped[str] = mapped_column(String(40), default="viewer")

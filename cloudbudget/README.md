@@ -22,11 +22,26 @@ pip install -e .
 uvicorn api.main:app --reload --port 8000
 ```
 
+
+## Required bootstrap files
+- Copy `.env.example` to `.env` and fill secrets for your providers and Keycloak.
+- Initialize local OLAP schema:
+  ```bash
+  python scripts/init_duckdb.py
+  ```
+
 ## Docker stack
 ```bash
 cd cloudbudget
 docker compose up -d --build
 ```
+
+
+## Included production scaffolding
+- `analytics/dbt_models/cost_daily_agg.sql` – dbt model for daily cost aggregation.
+- `auth/keycloak/realm-export.json` – starter Keycloak realm/client/roles export.
+- `monitoring/grafana/dashboards/cloudbudget-overview.json` – baseline Grafana dashboard for API traffic/latency.
+- `.github/workflows/cloudbudget-ci.yml` – CI workflow (install + pytest).
 
 ## Main endpoints
 - `GET /api/v1/healthz`
@@ -37,4 +52,12 @@ docker compose up -d --build
 - `GET /api/v1/budgets/{tenant_id}`
 - `GET /api/v1/predictions/{tenant_id}`
 - `POST /api/v1/simulations/what-if`
+- `POST /api/v1/whatif/architecture-migration`
+- `GET /api/v1/multicloud/providers`
+- `POST /api/v1/multicloud/collect`
 - `WS /ws/costs`
+
+
+## Pulumi stack shape
+- `infrastructure/pulumi/__main__.py` exports deployment knobs (replicas/storage/region) and checks secret presence from Pulumi config.
+- Configure with `pulumi config set` / `pulumi config set --secret` before `pulumi up`.

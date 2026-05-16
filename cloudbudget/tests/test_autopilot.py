@@ -1,8 +1,9 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from api.core.database import Base
-from api.models.entities import Tenant, Recommendation
-from api.services.autopilot_service import eligible_autopilot_recommendations, mark_recommendations_approved
+from api.models.entities import ActionRequestLog, Recommendation, Tenant
+from api.services.autopilot_service import apply_autopilot_plan, eligible_autopilot_recommendations
 
 
 def test_autopilot_eligibility_and_apply():
@@ -21,8 +22,11 @@ def test_autopilot_eligibility_and_apply():
     eligible = eligible_autopilot_recommendations(db, 1)
     assert len(eligible) == 1
 
-    updated = mark_recommendations_approved(db, 1, [eligible[0].id, 9999])
-    assert updated == 1
+    result = apply_autopilot_plan(db, 1, [eligible[0].id], requested_by="finops-bot")
+    assert result["approved_count"] == 1
+    assert len(result["action_requests"]) == 1
+
     assert db.query(Recommendation).filter(Recommendation.id == eligible[0].id).first().approved is True
+    assert db.query(ActionRequestLog).count() == 1
     # cross-tenant recommendation must remain unchanged
     assert db.query(Recommendation).filter(Recommendation.tenant_id == 2).first().approved is False

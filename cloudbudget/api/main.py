@@ -25,6 +25,7 @@ from api.routers import (
     invoice_reconciliation,
     reports,
     whatif, dlq,
+    multicloud,
 )
 
 Base.metadata.create_all(bind=engine)
@@ -53,6 +54,7 @@ app.include_router(invoice_reconciliation.router, prefix=settings.api_prefix)
 app.include_router(reports.router, prefix=settings.api_prefix)
 app.include_router(whatif.router, prefix=settings.api_prefix)
 app.include_router(dlq.router, prefix=settings.api_prefix)
+app.include_router(multicloud.router, prefix=settings.api_prefix)
 app.include_router(realtime.router)
 
 
