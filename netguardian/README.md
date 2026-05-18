@@ -46,6 +46,11 @@ docker compose up -d --build
 ```
 API docs: `http://localhost:8300/docs`
 
+
+## DuckDB storage mode
+NetGuardian korzysta z lokalnego pliku DuckDB (`DUCKDB_PATH`) montowanego przez wolumen `duckdb_data:/data`.
+Nie jest wymagany osobny serwis `duckdb-api`, ponieważ aplikacja łączy się bezpośrednio z plikiem bazy.
+
 ## API (wybrane endpointy)
 | Metoda | Endpoint | Opis |
 |---|---|---|

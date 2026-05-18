@@ -51,6 +51,7 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       REDIS_HOST: redis
       DATABASE_URL: postgresql://postgres:netguardian@timescaledb:5432/netguardian
+      # NetGuardian uses embedded DuckDB file storage (no duckdb-api service required)
       DUCKDB_PATH: /data/netguardian.db
       ABUSEIPDB_API_KEY: ${ABUSEIPDB_API_KEY}
       SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}

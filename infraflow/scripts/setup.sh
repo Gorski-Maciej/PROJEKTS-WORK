@@ -16,5 +16,6 @@ fi
 echo "[infraflow] setup complete"
 
 command -v docker >/dev/null || { echo "Docker not found"; exit 1; }
+docker compose -f "$ROOT/docker-compose.yml" up -d --build
 docker compose -f "$ROOT/docker-compose.yml" build
 docker compose -f "$ROOT/docker-compose.yml" up -d
