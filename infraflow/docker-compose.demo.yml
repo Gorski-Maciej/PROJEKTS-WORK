@@ -1,0 +1,11 @@
+services:
+  db:
+    ports: ["55432:5432"]
+  engine:
+    ports: ["8100:8000"]
+  dashboard:
+    ports: ["8180:8080"]
+  prometheus:
+    ports: ["9190:9090"]
+  grafana:
+    ports: ["3100:3000"]
