@@ -4,7 +4,9 @@ services:
       context: .
       dockerfile: server/main_mcp/Dockerfile
     ports:
-      - "8000:8000"
+      - "8400:8000"
+    volumes:
+      - ./data:/app/data
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/realtime/health', timeout=3)"]
       interval: 15s
@@ -16,7 +18,7 @@ services:
       context: .
       dockerfile: server/operational_mcp/Dockerfile
     ports:
-      - "8001:8001"
+      - "8401:8001"
     environment:
       MAIN_MCP_URL: http://main_mcp:8000
     depends_on:
@@ -33,7 +35,7 @@ services:
       context: .
       dockerfile: frontend/Dockerfile
     ports:
-      - "3000:3000"
+      - "3400:3000"
     depends_on:
       main_mcp:
         condition: service_healthy
