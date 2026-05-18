@@ -1,14 +1,9 @@
 PROJECTS=cloudbudget infraflow netguardian netaegis
 
-.PHONY: all down test check-docker
-
-check-docker:
-	@command -v docker >/dev/null || (echo "Docker is required but not installed/in PATH" && exit 127)
-
-all: check-docker
+all:
 	@for p in $(PROJECTS); do docker compose -f $$p/docker-compose.yml up -d --build; done
 
-down: check-docker
+down:
 	@for p in $(PROJECTS); do docker compose -f $$p/docker-compose.yml down; done
 
 test:
