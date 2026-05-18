@@ -44,3 +44,5 @@ def _init_duckdb() -> None:
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
     _init_duckdb()
+def init_db() -> None:
+    Base.metadata.create_all(bind=engine)

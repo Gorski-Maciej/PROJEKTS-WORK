@@ -48,7 +48,7 @@ services:
   frontend:
     build:
       context: ./frontend
-    ports: ["3000:3000"]
+    ports: ["3100:3000"]
     depends_on: [api]
 
 volumes:
