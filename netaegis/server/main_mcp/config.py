@@ -6,3 +6,5 @@ class Settings(BaseModel):
     redis_url: str = "redis://localhost:6379/0"
 
 settings = Settings()
+
+REDIS_URL = "redis://redis:6379/0"
