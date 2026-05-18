@@ -21,6 +21,7 @@ services:
       DATABASE_URL: postgresql://postgres:infraflow@timescaledb:5432/infraflow
       CONFIG_PATH: /app/config/servers.yml
     ports: ["8001:8000"]
+    ports: ["8200:8000"]
     volumes:
       - ./engine:/app
       - ./keys:/app/keys:ro
@@ -47,6 +48,7 @@ services:
     build: ./dashboard
     depends_on: [engine]
     ports: ["8081:8080"]
+    ports: ["8201:8080"]
     environment:
       ENGINE_URL: http://engine:8000
 

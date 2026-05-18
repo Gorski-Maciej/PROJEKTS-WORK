@@ -23,6 +23,24 @@ Platforma FinOps do analizy kosztów chmury, prognozowania i automatyzacji rekom
 - Docker Compose
 
 ## Szybki start
+# Cloudbudget
+
+Projekt cloudbudget - dokumentacja uruchomienia.
+
+## Funkcje
+- API
+- Dashboard
+- Kolejki i baza danych
+
+## Architektura
+```
+[Client] -> [API] -> [DB/Cache/Queue]
+```
+
+## Stack
+Python, FastAPI, Docker Compose
+
+## Quick start
 ```bash
 cp -n .env.example .env
 docker compose up -d --build
@@ -35,6 +53,11 @@ API docs: `http://localhost:8100/docs`
 | GET | / | Health root |
 | GET | /docs | Swagger UI |
 | GET | /api/v1/health | Stan API |
+
+## Endpointy
+| Metoda | Endpoint | Opis |
+|---|---|---|
+| GET | /docs | Swagger UI |
 
 ## Testy
 ```bash
