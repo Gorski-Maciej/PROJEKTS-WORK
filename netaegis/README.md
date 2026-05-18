@@ -20,27 +20,8 @@ Dwuwarstwowy system MCP (main + operational) z agentami NetPulse, SecLog i NetCo
 - Docker Compose
 
 ## Szybki start
-# Netaegis
-
-Projekt netaegis - dokumentacja uruchomienia.
-
-## Funkcje
-- API
-- Dashboard
-- Kolejki i baza danych
-
-## Architektura
-```
-[Client] -> [API] -> [DB/Cache/Queue]
-```
-
-## Stack
-Python, FastAPI, Docker Compose
-
-## Quick start
 ```bash
-cp -n .env.example .env
-docker compose up -d --build
+cp .env.example .env && docker compose up -d
 ```
 Main MCP docs: `http://localhost:8400/docs`
 Operational MCP docs: `http://localhost:8401/docs`
@@ -50,11 +31,6 @@ Operational MCP docs: `http://localhost:8401/docs`
 |---|---|---|
 | GET | /api/realtime/health | Health main MCP |
 | GET | /api/status/ | Health operational MCP |
-
-## Endpointy
-| Metoda | Endpoint | Opis |
-|---|---|---|
-| GET | /docs | Swagger UI |
 
 ## Testy
 ```bash

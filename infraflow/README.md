@@ -21,27 +21,8 @@ System monitoringu infrastruktury serwerowej z metrykami time-series i dashboard
 - Docker Compose
 
 ## Szybki start
-# Infraflow
-
-Projekt infraflow - dokumentacja uruchomienia.
-
-## Funkcje
-- API
-- Dashboard
-- Kolejki i baza danych
-
-## Architektura
-```
-[Client] -> [API] -> [DB/Cache/Queue]
-```
-
-## Stack
-Python, FastAPI, Docker Compose
-
-## Quick start
 ```bash
-cp -n .env.example .env
-docker compose up -d --build
+cp .env.example .env && docker compose up -d
 ```
 API docs: `http://localhost:8001/docs`
 Dashboard: `http://localhost:8081`
@@ -51,11 +32,6 @@ Dashboard: `http://localhost:8081`
 |---|---|---|
 | GET | /docs | Swagger UI |
 | GET | /health | Healthcheck API |
-
-## Endpointy
-| Metoda | Endpoint | Opis |
-|---|---|---|
-| GET | /docs | Swagger UI |
 
 ## Testy
 ```bash

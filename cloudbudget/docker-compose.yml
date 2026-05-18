@@ -8,6 +8,7 @@ services:
       DATABASE_URL: postgresql+psycopg://cloudbudget:cloudbudget@postgres:5432/cloudbudget
       REDIS_URL: redis://redis:6379/0
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672//
+      JWT_SECRET: ${JWT_SECRET:-demo}
     ports: ["8100:8000"]
     depends_on: [postgres, redis, rabbitmq]
     volumes:
@@ -22,6 +23,7 @@ services:
       DATABASE_URL: postgresql+psycopg://cloudbudget:cloudbudget@postgres:5432/cloudbudget
       REDIS_URL: redis://redis:6379/0
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672//
+      JWT_SECRET: ${JWT_SECRET:-demo}
     depends_on: [postgres, redis, rabbitmq]
 
   postgres:

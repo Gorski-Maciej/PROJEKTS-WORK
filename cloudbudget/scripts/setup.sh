@@ -6,10 +6,10 @@ if [[ -f "$ROOT/.env.example" && ! -f "$ROOT/.env" ]]; then cp "$ROOT/.env.examp
 echo "[cloudbudget] optional bootstrap commands:"
 echo "  docker compose -f $ROOT/docker-compose.yml run --rm api python /app/scripts/init_duckdb.py"
 echo "  docker compose -f $ROOT/docker-compose.yml run --rm api python /app/scripts/bootstrap_demo_data.py"
+echo "[cloudbudget] optional frontend dependency install (required for local frontend dev):"
+echo "  cd $ROOT/frontend && npm install"
 echo "[cloudbudget] setup complete"
 
 command -v docker >/dev/null || { echo "Docker not found"; exit 1; }
 
 docker compose -f "$ROOT/docker-compose.yml" up -d --build
-docker compose -f "$ROOT/docker-compose.yml" build
-docker compose -f "$ROOT/docker-compose.yml" up -d

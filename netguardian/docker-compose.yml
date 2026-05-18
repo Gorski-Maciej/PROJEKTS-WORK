@@ -60,7 +60,7 @@ services:
       SSH_PRIVATE_KEY_FILE: /app/ssh/id_rsa
       SSH_AGENT_HOST: agent
       SSH_AGENT_USER: root
-      GEOIP_DB: /app/data/GeoLite2-City.mmdb
+      GEOIP_DB: /app/data/GeoLite2-City.mmdb  # requires manual GeoLite2 download
     ports:
       - "8300:8000"
       - "8302:8000"
