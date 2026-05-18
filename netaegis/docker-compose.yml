@@ -1,10 +1,20 @@
 services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
   main_mcp:
     build:
       context: .
       dockerfile: server/main_mcp/Dockerfile
     ports:
       - "8000:8000"
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - redis
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/realtime/health', timeout=3)"]
       interval: 15s

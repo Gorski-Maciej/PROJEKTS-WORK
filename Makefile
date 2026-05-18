@@ -1,30 +1,32 @@
-SHELL := /usr/bin/env bash
+PROJECTS := cloudbudget infraflow netguardian netaegis
 
-.PHONY: help generate-from-nn nn-build demo-check setup demo-start demo-stop
+.PHONY: all up down test clean
 
-help:
-	@echo "Targets:"
-	@echo "  make generate-from-nn  - generate missing bootstrap/demo files from _nn.txt guidance"
-	@echo "  make demo-check        - validate demo prerequisites and compose configs"
-	@echo "  make setup             - run per-project setup scripts"
-	@echo "  make demo-start        - setup + start all demo stacks"
-	@echo "  make demo-stop         - stop all demo stacks"
+all: up
 
-generate-from-nn:
-	python tools/generate_from_nn.py --sync --source _nn.txt
+up:
+	@for p in $(PROJECTS); do \
+		echo "[up] $$p"; \
+		cd $$p && bash scripts/setup.sh && docker compose up -d || exit 1; \
+		cd - >/dev/null; \
+	done
 
-demo-check:
-	./tools/demo_doctor.sh
+down:
+	@for p in $(PROJECTS); do \
+		echo "[down] $$p"; \
+		cd $$p && docker compose down || exit 1; \
+		cd - >/dev/null; \
+	done
 
-setup:
-	./setup.sh
+test:
+	@for p in $(PROJECTS); do \
+		echo "[test] $$p"; \
+		if [ -d $$p/tests ]; then cd $$p && pytest -q || exit 1; cd - >/dev/null; else echo "no tests dir"; fi; \
+	done
 
-demo-start:
-	./run_all_demos.sh --with-setup
-
-demo-stop:
-	./stop_all_demos.sh
-
-
-nn-build:
-	python tools/nn_build_project.py --source _nn.txt
+clean:
+	@for p in $(PROJECTS); do \
+		echo "[clean] $$p"; \
+		cd $$p && docker compose down -v --remove-orphans || true; \
+		cd - >/dev/null; \
+	done

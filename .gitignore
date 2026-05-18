@@ -1,8 +1,17 @@
+# Python
 __pycache__/
 *.pyc
-.venv/
-node_modules/
-.next/
+.pytest_cache/
 
-_nn.txt
-_yy.txt
+# Node
+node_modules/
+
+# Env files
+.env
+
+# Local data
+*/data/
+
+# OS/editor
+.DS_Store
+.vscode/

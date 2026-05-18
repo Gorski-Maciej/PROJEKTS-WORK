@@ -9,6 +9,8 @@ services:
       REDIS_URL: redis://redis:6379/0
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672//
     ports: ["8000:8000"]
+    volumes:
+      - duckdb_data:/app/data
     depends_on: [postgres, redis, rabbitmq]
 
   worker:
@@ -43,3 +45,7 @@ services:
       context: ./frontend
     ports: ["3000:3000"]
     depends_on: [api]
+
+volumes:
+  duckdb_data:
+    driver: local

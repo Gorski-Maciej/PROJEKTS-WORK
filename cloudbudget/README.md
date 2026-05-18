@@ -1,63 +1,29 @@
-# CloudBudget 2.0
+# CloudBudget 2.0 – Autonomous FinOps Platform
 
-CloudBudget 2.0 is a self-hosted, multi-tenant FinOps platform implementing:
-- multi-cloud ingestion agents (AWS/Azure/GCP/On-Prem/Kubernetes),
-- FastAPI backend with REST + WebSocket,
-- asynchronous task execution using Celery + RabbitMQ,
-- OLTP (PostgreSQL) and OLAP (DuckDB + Polars),
-- budget monitoring, recommendations, and forecasting.
+![FinOps](https://img.shields.io/badge/FinOps-optimized-blue)
 
-## Implemented modules
-- **API routers:** health, costs ingest/summary, recommendations, simulations, budgets, predictions.
-- **Realtime:** WebSocket endpoint `/ws/costs`.
-- **Services:** ingestion, analytics, recommendation, simulation, budget, prediction, queue tasks.
-- **Agents:** normalized cost records from providers.
-- **Frontend:** Next.js dashboard consuming API endpoints.
+CloudBudget 2.0 to samodzielna platforma FinOps, która nie tylko monitoruje koszty wielu chmur (AWS, Azure, GCP, on‑premise), ale aktywnie proponuje optymalizacje, prognozuje przyszłe wydatki i automatycznie wykonuje zaakceptowane rekomendacje. System łączy nowoczesny frontend (Next.js) z zaawansowanym backendem analitycznym (FastAPI, DuckDB, Prophet).
 
-## Quick start (local)
+## 🚀 Kluczowe cechy
+- **Multi‑cloud cost aggregation** – dane z AWS, Azure, GCP i Kubernetes w jednym miejscu
+- **Inteligentne rekomendacje** – idle resources, unattached volumes, rightsizing, RI/Savings Plans
+- **Symulacje What‑If** – migracja między chmurami, zmiana typu instancji, analiza kosztów przed wdrożeniem
+- **Automatyczne akcje (AutoPilot)** – samoczynne zatrzymywanie nieużywanych zasobów po okresie akceptacji
+- **Predykcja kosztów** – Prophet z sezonowością i alertami o przekroczeniu budżetu
+- **OCR faktur** – ekstrakcja danych z PDF za pomocą Tesseract + LLM
+- **Wielodostępność** – izolacja danych per tenant (Row‑Level Security)
+- **Monitoring** – Prometheus + Grafana + Alertmanager
+
+## 📦 Technologie
+- **Backend:** FastAPI, Celery, RabbitMQ, PostgreSQL, DuckDB, Redis
+- **Analityka:** Polars, dbt, Prophet, Isolation Forest
+- **Frontend:** Next.js 14, React, TailwindCSS, Tremor, GraphQL
+- **DevOps:** Docker Compose, Kubernetes, Helm, Pulumi, GitHub Actions
+- **Bezpieczeństwo:** Keycloak, HashiCorp Vault, Trivy, OWASP ZAP
+
+## ⚡ Szybki start
 ```bash
 cd cloudbudget
-python -m venv .venv && source .venv/bin/activate
-pip install -e .
-uvicorn api.main:app --reload --port 8000
+cp .env.example .env
+bash scripts/setup.sh
 ```
-
-
-## Required bootstrap files
-- Copy `.env.example` to `.env` and fill secrets for your providers and Keycloak.
-- Initialize local OLAP schema:
-  ```bash
-  python scripts/init_duckdb.py
-  ```
-
-## Docker stack
-```bash
-cd cloudbudget
-docker compose up -d --build
-```
-
-
-## Included production scaffolding
-- `analytics/dbt_models/cost_daily_agg.sql` – dbt model for daily cost aggregation.
-- `auth/keycloak/realm-export.json` – starter Keycloak realm/client/roles export.
-- `monitoring/grafana/dashboards/cloudbudget-overview.json` – baseline Grafana dashboard for API traffic/latency.
-- `.github/workflows/cloudbudget-ci.yml` – CI workflow (install + pytest).
-
-## Main endpoints
-- `GET /api/v1/healthz`
-- `POST /api/v1/costs/ingest`
-- `GET /api/v1/costs/summary/{tenant_id}`
-- `POST /api/v1/recommendations/generate/{tenant_id}`
-- `POST /api/v1/budgets`
-- `GET /api/v1/budgets/{tenant_id}`
-- `GET /api/v1/predictions/{tenant_id}`
-- `POST /api/v1/simulations/what-if`
-- `POST /api/v1/whatif/architecture-migration`
-- `GET /api/v1/multicloud/providers`
-- `POST /api/v1/multicloud/collect`
-- `WS /ws/costs`
-
-
-## Pulumi stack shape
-- `infrastructure/pulumi/__main__.py` exports deployment knobs (replicas/storage/region) and checks secret presence from Pulumi config.
-- Configure with `pulumi config set` / `pulumi config set --secret` before `pulumi up`.
