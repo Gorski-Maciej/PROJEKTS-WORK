@@ -1,0 +1,41 @@
+services:
+  cloudbudget:
+    build: ./cloudbudget
+    env_file: ./cloudbudget/.env.example
+    ports:
+      - "9001:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+  infraflow:
+    build: ./infraflow
+    env_file: ./infraflow/.env.example
+    ports:
+      - "9002:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+  netguardian:
+    build: ./netguardian
+    env_file: ./netguardian/.env.example
+    ports:
+      - "9003:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+  netaegis:
+    build: ./netaegis
+    env_file: ./netaegis/.env.example
+    ports:
+      - "9004:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5

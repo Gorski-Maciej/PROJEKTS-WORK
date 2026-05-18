@@ -1,0 +1,23 @@
+services:
+  timescaledb:
+    ports:
+      - "56432:5432"
+  redis:
+    ports:
+      - "6380:6379"
+  kafka:
+    ports:
+      - "9093:9092"
+  engine:
+    ports:
+      - "8200:8000"
+      - "8201:8000"
+  dashboard:
+    ports:
+      - "8280:8080"
+  prometheus:
+    ports:
+      - "9290:9090"
+  grafana:
+    ports:
+      - "3200:3000"
