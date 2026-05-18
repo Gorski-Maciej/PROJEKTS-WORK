@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from api.core.config import settings
-from api.core.database import Base, engine
+from api.core.database import init_db
 from api.routers import (
     health,
     costs,
@@ -28,7 +28,7 @@ from api.routers import (
     multicloud,
 )
 
-Base.metadata.create_all(bind=engine)
+init_db()
 
 app = FastAPI(title=settings.app_name, version="2.2.0")
 app.include_router(health.router, prefix=settings.api_prefix)

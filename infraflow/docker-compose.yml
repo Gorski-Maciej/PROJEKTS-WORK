@@ -9,7 +9,7 @@ services:
     environment:
       POSTGRES_PASSWORD: infraflow
       POSTGRES_DB: infraflow
-    ports: ["5432:5432"]
+    ports: ["56432:5432"]
     volumes: ["timescale_data:/var/lib/postgresql/data"]
 
   engine:
@@ -20,7 +20,7 @@ services:
       REDIS_HOST: redis
       DATABASE_URL: postgresql://postgres:infraflow@timescaledb:5432/infraflow
       CONFIG_PATH: /app/config/servers.yml
-    ports: ["8000:8000"]
+    ports: ["8001:8000"]
     volumes:
       - ./engine:/app
       - ./keys:/app/keys:ro
@@ -37,11 +37,16 @@ services:
     volumes:
       - ./engine:/app
       - ./keys:/app/keys:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "print('ok')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   dashboard:
     build: ./dashboard
     depends_on: [engine]
-    ports: ["8080:8080"]
+    ports: ["8081:8080"]
     environment:
       ENGINE_URL: http://engine:8000
 
@@ -49,7 +54,7 @@ services:
     image: prom/prometheus
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    ports: ["9090:9090"]
+    ports: ["9290:9090"]
 
   grafana:
     image: grafana/grafana:latest
@@ -58,7 +63,7 @@ services:
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning
       - ./grafana/dashboards:/var/lib/grafana/dashboards
-    ports: ["3000:3000"]
+    ports: ["3200:3000"]
 
 volumes:
   timescale_data:

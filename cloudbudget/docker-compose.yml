@@ -8,8 +8,11 @@ services:
       DATABASE_URL: postgresql+psycopg://cloudbudget:cloudbudget@postgres:5432/cloudbudget
       REDIS_URL: redis://redis:6379/0
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672//
-    ports: ["8000:8000"]
+      JWT_SECRET: ${JWT_SECRET:-demo}
+    ports: ["8100:8000"]
     depends_on: [postgres, redis, rabbitmq]
+    volumes:
+      - duckdb_data:/app/data
 
   worker:
     build:
@@ -20,6 +23,7 @@ services:
       DATABASE_URL: postgresql+psycopg://cloudbudget:cloudbudget@postgres:5432/cloudbudget
       REDIS_URL: redis://redis:6379/0
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672//
+      JWT_SECRET: ${JWT_SECRET:-demo}
     depends_on: [postgres, redis, rabbitmq]
 
   postgres:
@@ -28,18 +32,26 @@ services:
       POSTGRES_DB: cloudbudget
       POSTGRES_USER: cloudbudget
       POSTGRES_PASSWORD: cloudbudget
-    ports: ["5432:5432"]
+    ports: ["55432:5432"]
 
   redis:
     image: redis:7
-    ports: ["6379:6379"]
+    ports: ["56379:6379"]
 
   rabbitmq:
     image: rabbitmq:3-management
-    ports: ["5672:5672", "15672:15672"]
+    ports: ["55672:5672", "15673:15672"]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   frontend:
     build:
       context: ./frontend
-    ports: ["3000:3000"]
+    ports: ["3100:3000"]
     depends_on: [api]
+
+volumes:
+  duckdb_data:
