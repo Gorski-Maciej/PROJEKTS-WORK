@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-source "$ROOT/scripts/demo_projects.sh"
+source "$ROOT/tools/demo_projects.sh"
 
 require_cmd() {
   command -v "$1" >/dev/null 2>&1 || { echo "Missing command: $1"; return 1; }
