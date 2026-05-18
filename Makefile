@@ -14,7 +14,7 @@ generate-from-nn:
 	python tools/generate_from_nn.py --sync --source _nn.txt
 
 demo-check:
-	./scripts/demo_doctor.sh
+	./tools/demo_doctor.sh
 
 setup:
 	./setup.sh

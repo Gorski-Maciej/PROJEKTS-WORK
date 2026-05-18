@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$ROOT/scripts/demo_projects.sh"
+source "$ROOT/tools/demo_projects.sh"
 command -v docker >/dev/null 2>&1 || { echo "docker command not found" >&2; exit 1; }
 if [[ "${1:-}" == "--with-setup" ]]; then
   "$ROOT/setup.sh"

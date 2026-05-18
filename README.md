@@ -21,7 +21,7 @@ Monorepo zawiera 4 projekty demonstracyjne:
 
 Dla uruchomienia wszystkich projektów jednocześnie używane są pliki `docker-compose.demo.yml` (unikalne porty, brak konfliktów).
 
-Skrypty `setup.sh`, `run_all_demos.sh` i `stop_all_demos.sh` korzystają ze wspólnej matrycy projektów: `scripts/demo_projects.sh` (jedno źródło prawdy dla katalogów/override compose/setup).
+Skrypty `setup.sh`, `run_all_demos.sh` i `stop_all_demos.sh` korzystają ze wspólnej matrycy projektów: `tools/demo_projects.sh` (jedno źródło prawdy dla katalogów/override compose/setup).
 
 ## Zatrzymanie
 
@@ -47,7 +47,7 @@ Skrypty `setup.sh`, `run_all_demos.sh` i `stop_all_demos.sh` korzystają ze wsp�
 ## Weryfikacja przed demo
 
 ```bash
-./scripts/demo_doctor.sh
+./tools/demo_doctor.sh
 ```
 
 Uruchamia walidację: wymagane komendy, obecność `.env.example`, wykonywalność setup scripts i poprawność `docker compose config` dla każdego projektu.

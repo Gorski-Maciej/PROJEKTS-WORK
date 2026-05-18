@@ -1,2 +1,0 @@
-# netguardian
-Generated runnable FastAPI service. Exposed on localhost:9003.
