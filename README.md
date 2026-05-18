@@ -1,118 +1,99 @@
 # PROJEKTS-WORK
 
-Monorepo zawiera 4 projekty demonstracyjne:
-- `cloudbudget`
-- `infraflow`
-- `netguardian`
-- `netaegis`
+Repozytorium ma **celowo minimalistyczną strukturę**:
 
-## One-click demo (lokalnie)
-
-```bash
-./setup.sh
-./run_all_demos.sh
+```text
+PROJEKTS-WORK/
+├── README.md
+├── cloudbudget/
+├── infraflow/
+├── netguardian/
+└── netaegis/
 ```
 
-`setup.sh` uruchamia dedykowane setupy projektowe:
-- `cloudbudget/scripts/setup.sh`
-- `infraflow/scripts/setup.sh`
-- `netguardian/scripts/setup.sh`
-- `netaegis/scripts/setup.sh`
+W katalogu głównym znajduje się wyłącznie ten plik oraz 4 katalogi projektowe. Wszystkie skrypty uruchomieniowe, pliki konfiguracyjne i pliki startowe znajdują się wewnątrz odpowiednich projektów.
 
-Dla uruchomienia wszystkich projektów jednocześnie używane są pliki `docker-compose.demo.yml` (unikalne porty, brak konfliktów).
+---
 
-Skrypty `setup.sh`, `run_all_demos.sh` i `stop_all_demos.sh` korzystają ze wspólnej matrycy projektów: `tools/demo_projects.sh` (jedno źródło prawdy dla katalogów/override compose/setup).
+## 1) cloudbudget/
 
-## Zatrzymanie
+**CloudBudget 2.0** – autonomiczna platforma FinOps dla środowisk multi-cloud (AWS/Azure/GCP/on-prem).
 
+### Kluczowe elementy
+- Agregacja kosztów multi-cloud.
+- Rekomendacje optymalizacyjne (idle resources, rightsizing, itp.).
+- Symulacje kosztowe (what-if).
+- Predykcja kosztów i alerty budżetowe.
+- Automatyzacja wybranych akcji optymalizacyjnych.
+
+### Szybki start
 ```bash
-./stop_all_demos.sh
+cd cloudbudget
+cp .env.example .env
+bash scripts/setup.sh
 ```
 
-## Adresy po uruchomieniu
+---
 
-- CloudBudget frontend: http://localhost:3000
-- CloudBudget API docs: http://localhost:8000/docs
-- InfraFlow dashboard: http://localhost:8180
-- InfraFlow API docs: http://localhost:8100/docs
-- NetGuardian dashboard: http://localhost:8280
-- NetGuardian API docs: http://localhost:8200/docs
-- NetAegis frontend: http://localhost:3300
-- NetAegis Main MCP docs: http://localhost:8300/docs
-- NetAegis Operational MCP docs: http://localhost:8301/docs
+## 2) infraflow/
 
-> Uwaga: NetGuardian enrichment GeoIP wymaga pliku `GeoLite2-City.mmdb` (MaxMind).
+**InfraFlow** – system monitorowania i samonaprawy infrastruktury (Linux/Windows) z regułami YAML.
 
+### Kluczowe elementy
+- Monitoring bezagentowy (SSH/WinRM).
+- Automatyczne akcje naprawcze (restart usług, porządki, itp.).
+- Audyt i historia incydentów.
+- Integracje powiadomień (np. Slack/email/webhook).
 
-## Weryfikacja przed demo
-
+### Szybki start
 ```bash
-./tools/demo_doctor.sh
+cd infraflow
+cp .env.example .env
+bash scripts/setup.sh
 ```
 
-Uruchamia walidację: wymagane komendy, obecność `.env.example`, wykonywalność setup scripts i poprawność `docker compose config` dla każdego projektu.
+---
 
-Możesz też uruchomić wszystko jednym poleceniem razem z setupem:
+## 3) netguardian/
 
+**NetGuardian 2.0** – platforma monitoringu i reakcji bezpieczeństwa sieciowego (SIEM/SOAR).
+
+### Kluczowe elementy
+- Detekcja anomalii i korelacja zdarzeń.
+- Automatyczna reakcja (np. blokady IP, playbooki).
+- Dashboard czasu rzeczywistego.
+- Integracje threat intelligence.
+
+### Szybki start
 ```bash
-./run_all_demos.sh --with-setup
+cd netguardian
+cp .env.example .env
+bash scripts/setup.sh
 ```
 
+---
 
-## Generowanie brakujących plików z _nn.txt
+## 4) netaegis/
 
-Repo zawiera generator, który tworzy brakujące pliki bootstrap/demo na podstawie wytycznych z `_yy.txt`:
+**NetAegis** – platforma SOAR oparta o architekturę agentową i centralny MCP.
 
+### Kluczowe elementy
+- Agenci zbierający dane i zdarzenia.
+- Centralny silnik reguł (MCP).
+- Orkiestracja reakcji na incydenty.
+- Interfejs operacyjny do obserwacji i sterowania.
+
+### Szybki start
 ```bash
-python tools/generate_from_nn.py
+cd netaegis
+cp .env.example .env
+bash scripts/setup.sh
 ```
 
-Wygenerowana skrócona instrukcja: `RUN_DEMO.md`.
+---
 
+## Zasada repo
 
-## Uruchomienie jednym poleceniem (Makefile)
-
-```bash
-make demo-start
-```
-
-Dodatkowe komendy:
-
-```bash
-make demo-check
-make demo-stop
-make generate-from-nn
-```
-
-
-Generator wspiera tryby:
-
-```bash
-python tools/generate_from_nn.py --dry-run
-python tools/generate_from_nn.py --sync
-```
-
-`--sync` nadpisuje wyłącznie pliki oznaczone markerem zarządzania generatora.
-
-
-Generator tworzy również `NN_TASKS.json` (mapa zadań per projekt wyciągnięta z `_yy.txt`), co ułatwia dalsze wdrożenie „całego kodu projektu” krok po kroku.
-
-
-Dodatkowo możesz wygenerować kompletny scaffold projektu z `_yy.txt`:
-
-```bash
-make nn-build
-```
-
-
-Aby wymusić generowanie dokładnie z `_nn.txt`:
-
-```bash
-python tools/generate_from_nn.py --sync --source _nn.txt
-python tools/nn_build_project.py --source _nn.txt
-```
-
-
-## CI dla generatora _nn
-
-Dodano workflow `nn-generated-project-ci`, który uruchamia `./tests_test_nn_build.sh` dla zmian w `tools/nn_build_project.py`, `_nn.txt` i test harnessie.
+- **1 README.md w root** (ten plik).
+- **4 katalogi = 4 projekty**.
+- Brak dodatkowych katalogów narzędziowych i dokumentacyjnych w root.

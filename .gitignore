@@ -1,8 +1,0 @@
-__pycache__/
-*.pyc
-.venv/
-node_modules/
-.next/
-
-_nn.txt
-_yy.txt
