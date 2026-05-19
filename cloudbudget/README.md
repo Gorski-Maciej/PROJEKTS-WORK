@@ -42,3 +42,16 @@ pytest -q
 
 ## Autor
 Team DevOps
+
+
+## Zmienne środowiskowe (nowe/istotne)
+- `JWT_SECRET` (min. 32 znaki, wymagany do walidacji tokenów).
+- `DUCKDB_PATH` (ścieżka do pliku DuckDB, domyślnie `/data/cloudbudget.duckdb`).
+
+## Uwierzytelnianie
+- `POST /auth/login` (demo): `username=demo`, `password=demo` zwraca bearer token JWT.
+- Endpointy chronione (np. `/api/v1/costs`, `/api/v1/recommendations`) wymagają nagłówka `Authorization: Bearer <token>`.
+
+## Troubleshooting
+- Błąd `Missing token`/`Invalid token`: wygeneruj token przez `/auth/login` i upewnij się, że `JWT_SECRET` jest spójny.
+- Błąd walidacji env: uruchom `make validate-env` i ustaw `JWT_SECRET` > 32 znaków.

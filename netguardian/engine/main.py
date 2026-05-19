@@ -12,6 +12,13 @@ logger = logging.getLogger("netguardian")
 app = FastAPI(title="NetGuardian API")
 
 
+try:
+    import geoip2.database
+    geoip_reader = geoip2.database.Reader('/app/data/GeoLite2-City.mmdb')
+except Exception:
+    geoip_reader = None
+
+
 async def kafka_consumer_simulator() -> None:
     topic = os.getenv("KAFKA_TOPIC", "netguardian.raw_flows")
     while True:

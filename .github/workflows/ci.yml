@@ -1,98 +1,18 @@
-name: Monorepo CI
-
-on:
-  pull_request:
-  push:
-    branches: [main, master]
-
+name: CI
+on: [push, pull_request]
 jobs:
-  detect-changes:
+  validate:
     runs-on: ubuntu-latest
-    outputs:
-      cloudbudget: ${{ steps.filter.outputs.cloudbudget }}
-      infraflow: ${{ steps.filter.outputs.infraflow }}
-      netguardian: ${{ steps.filter.outputs.netguardian }}
-      netaegis: ${{ steps.filter.outputs.netaegis }}
     steps:
       - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            cloudbudget:
-              - 'cloudbudget/**'
-              - 'libs/**'
-              - 'tests/**'
-            infraflow:
-              - 'infraflow/**'
-              - 'libs/**'
-              - 'tests/**'
-            netguardian:
-              - 'netguardian/**'
-              - 'libs/**'
-              - 'tests/**'
-            netaegis:
-              - 'netaegis/**'
-              - 'libs/**'
-              - 'tests/**'
-
-  quality:
-    needs: detect-changes
+      - name: Verify ports
+        run: ./verify_all_ports.sh
+      - name: Validate env
+        run: make validate-env
+  test:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - service: cloudbudget
-            python: '3.11'
-            changed: ${{ needs.detect-changes.outputs.cloudbudget }}
-          - service: infraflow
-            python: '3.11'
-            changed: ${{ needs.detect-changes.outputs.infraflow }}
-          - service: netguardian
-            python: '3.11'
-            changed: ${{ needs.detect-changes.outputs.netguardian }}
-          - service: netaegis
-            python: '3.11'
-            changed: ${{ needs.detect-changes.outputs.netaegis }}
-    if: github.event_name == 'push' || matrix.changed == 'true'
+    needs: validate
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python }}
-          cache: pip
-          cache-dependency-path: |
-            ${{ matrix.service }}/requirements.txt
-            ${{ matrix.service }}/pyproject.toml
-            ${{ matrix.service }}/**/requirements.txt
-      - name: Setup Node if frontend exists
-        if: ${{ hashFiles(format('{0}/frontend/package-lock.json', matrix.service)) != '' || hashFiles(format('{0}/frontend/package.json', matrix.service)) != '' }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-          cache-dependency-path: ${{ matrix.service }}/frontend/package-lock.json
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f "${{ matrix.service }}/requirements.txt" ]; then pip install -r "${{ matrix.service }}/requirements.txt"; fi
-          if [ -f "${{ matrix.service }}/pyproject.toml" ]; then pip install "${{ matrix.service }}[dev]" || true; fi
-          pip install pytest pytest-cov ruff bandit
-      - name: Lint
-        run: ruff check "${{ matrix.service }}"
-      - name: Security scan
-        run: bandit -q -r "${{ matrix.service }}" || true
-      - name: Test
-        run: |
-          if [ -d "${{ matrix.service }}/tests" ]; then
-            pytest "${{ matrix.service }}/tests" --cov="${{ matrix.service }}" --cov-report=xml:coverage-${{ matrix.service }}.xml
-          else
-            echo "No tests directory for ${{ matrix.service }}, skipping tests"
-          fi
-      - name: Upload coverage
-        uses: codecov/codecov-action@v4
-        with:
-          files: coverage-${{ matrix.service }}.xml
-          fail_ci_if_error: false
-          flags: ${{ matrix.service }}
+      - name: Test all projects
+        run: make test

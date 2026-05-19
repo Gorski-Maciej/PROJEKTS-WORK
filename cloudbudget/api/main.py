@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import asyncio
 import os
+import jwt
 from typing import Any
 
 import duckdb
-from fastapi import Depends, FastAPI, Header, HTTPException, status
+from fastapi import Depends, FastAPI, Header, HTTPException, Request, status
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from sqlalchemy import text
@@ -23,24 +24,24 @@ class RecommendationRequest(BaseModel):
     monthly_cost: float
 
 
-class LoginRequest(BaseModel):
-    username: str = "demo"
-    password: str = "demo"
 
-
-def require_jwt_token(authorization: str = Header(default="")) -> str:
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token")
-    token = authorization.removeprefix("Bearer ").strip()
-    payload = verify_access_token(token)
-    return str(payload.get("sub", "unknown"))
+def require_jwt_token(request: Request):
+    auth = request.headers.get("Authorization")
+    if not auth or not auth.startswith("Bearer "):
+        raise HTTPException(401, "Missing token")
+    token = auth.split(" ")[1]
+    try:
+        return verify_access_token(token)
+    except jwt.InvalidTokenError:
+        raise HTTPException(401, "Invalid token")
 
 
 @app.post("/auth/login")
-async def login(payload: LoginRequest) -> dict[str, str]:
-    if payload.username != "demo" or payload.password != "demo":
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-    return {"access_token": create_access_token(subject=payload.username, tenant_id=0), "token_type": "bearer"}
+def login(username: str, password: str):
+    if username == "demo" and password == "demo":
+        token = create_access_token({"sub": "demo", "role": "admin"})
+        return {"access_token": token, "token_type": "bearer"}
+    raise HTTPException(401, "Invalid credentials")
 
 
 @app.on_event("startup")

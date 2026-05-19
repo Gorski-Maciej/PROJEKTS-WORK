@@ -1,16 +1,7 @@
-#!/usr/bin/env bash
-set -euo pipefail
-
-ENVIRONMENT="${1:-dev}"
-
-python3 scripts/config_validator.py --environment "$ENVIRONMENT" --generate
-
-for project in cloudbudget infraflow netguardian netaegis; do
-  if [[ -f "$project/scripts/setup.sh" ]]; then
-    echo "[bootstrap] running $project setup"
-    bash "$project/scripts/setup.sh"
-  fi
-  cp -n "$project/.env.example" "$project/.env" || true
+#!/bin/bash
+for proj in cloudbudget infraflow netguardian netaegis; do
+    cd "$proj"
+    cp -n .env.example .env 2>/dev/null || echo ".env already exists in $proj"
+    cd ..
 done
-
-echo "[bootstrap] complete for environment: $ENVIRONMENT"
+echo "Configuration prepared"
