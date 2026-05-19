@@ -12,8 +12,8 @@ AGENT_ID = os.getenv("NETCONFIG_AGENT_ID", "netconfig-01")
 LOCAL_REPO = Path(os.getenv("NETCONFIG_LOCAL_REPO", "./configs"))
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 DEVICE_IP = os.getenv("NETCONFIG_DEVICE_IP", "192.168.1.1")
-DEVICE_USERNAME = os.getenv("NETCONFIG_DEVICE_USERNAME", "admin")
-DEVICE_PASSWORD = os.getenv("NETCONFIG_DEVICE_PASSWORD", "admin")
+DEVICE_USERNAME = os.getenv("NETCONFIG_DEVICE_USERNAME", "")
+DEVICE_PASSWORD = os.getenv("NETCONFIG_DEVICE_PASSWORD", "")
 
 
 def render_template(template_name: str, context: dict) -> str:
@@ -30,7 +30,12 @@ async def send_status(message: str):
         )
 
 
-async def collect_config(device_ip: str, username: str = "admin", password: str = "admin") -> str:
+async def collect_config(device_ip: str, username: str, password: str) -> str:
+    username = username or DEVICE_USERNAME
+    password = password or DEVICE_PASSWORD
+    if not username or not password:
+        raise ValueError("Missing NETCONFIG_DEVICE_USERNAME or NETCONFIG_DEVICE_PASSWORD")
+
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(device_ip, username=username, password=password, timeout=10)
@@ -40,7 +45,7 @@ async def collect_config(device_ip: str, username: str = "admin", password: str 
     return content
 
 
-async def push_config(device_ip: str, config: str, username: str = "admin", password: str = "admin"):
+async def push_config(device_ip: str, config: str, username: str | None = None, password: str | None = None):
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(device_ip, username=username, password=password, timeout=10)
@@ -64,6 +69,8 @@ async def main():
     rendered_file.write_text(template_render)
 
     try:
+        if not DEVICE_USERNAME or not DEVICE_PASSWORD:
+            raise ValueError("Missing NETCONFIG_DEVICE_USERNAME or NETCONFIG_DEVICE_PASSWORD")
         config = await collect_config(DEVICE_IP, DEVICE_USERNAME, DEVICE_PASSWORD)
         config_file = LOCAL_REPO / "router_config.txt"
         config_file.write_text(config)

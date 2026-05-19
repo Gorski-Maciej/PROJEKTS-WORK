@@ -1,7 +1,7 @@
 import paramiko
 
 class ActionExecutor:
-    async def execute_block_ip(self, host: str, ip: str, username: str = "admin", password: str = "admin") -> bool:
+    async def execute_block_ip(self, host: str, ip: str, username: str, password: str) -> bool:
         try:
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())

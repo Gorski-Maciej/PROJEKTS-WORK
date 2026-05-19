@@ -7,12 +7,18 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    healthcheck:
+      test: ["CMD", "sh", "-c", "echo ruok | nc -w 2 localhost 2181 | grep imok"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
 
   kafka:
     restart: unless-stopped
     image: confluentinc/cp-kafka:7.5.0
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     ports:
       - "19092:9092"
     environment:
@@ -31,10 +37,20 @@ services:
     image: redis:7-alpine
     ports:
       - "66379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
 
   timescaledb:
     restart: unless-stopped
     image: timescale/timescaledb:latest-pg14
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d netguardian"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
     environment:
       POSTGRES_PASSWORD: netguardian
       POSTGRES_DB: netguardian
@@ -49,9 +65,12 @@ services:
     build: ./engine
     working_dir: /app
     depends_on:
-      - kafka
-      - redis
-      - timescaledb
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      timescaledb:
+        condition: service_healthy
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       REDIS_HOST: redis
@@ -65,7 +84,8 @@ services:
       SSH_PRIVATE_KEY_FILE: /app/ssh/id_rsa
       SSH_AGENT_HOST: agent
       SSH_AGENT_USER: root
-      # GEOIP_DB: /app/data/GeoLite2-City.mmdb  # optional: mount GeoLite2 DB to enable geo-enrichment
+      GEOIP_DB: /app/data/GeoLite2-City.mmdb
+      SKIP_GEOIP_CHECK: ${SKIP_GEOIP_CHECK:-true}
       JWT_SECRET: ${JWT_SECRET:-change_me_32_chars_min}
     ports:
       - "8300:8000"
@@ -76,7 +96,7 @@ services:
       retries: 5
     volumes:
       - ./engine:/app
-      - ./engine/ssh:/app/ssh:ro
+      - ssh_keys:/app/ssh
       - ./engine/data:/app/data
       - duckdb_data:/data
 
@@ -84,7 +104,8 @@ services:
     restart: unless-stopped
     build: ./agent
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       AGENT_ID: agent-01
@@ -98,7 +119,8 @@ services:
     restart: unless-stopped
     build: ./dashboard
     depends_on:
-      - engine
+      engine:
+        condition: service_healthy
     ports:
       - "8301:8080"
     environment:
@@ -127,3 +149,4 @@ services:
 volumes:
   timescale_data:
   duckdb_data:
+  ssh_keys:

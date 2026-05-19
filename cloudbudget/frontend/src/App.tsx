@@ -9,12 +9,31 @@ export default function App() {
   const [costs, setCosts] = useState<CostItem[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/v1/costs", {
-      headers: { Authorization: "Bearer demo" }
-    })
-      .then((res) => res.json())
-      .then((data) => setCosts(data.items ?? []))
-      .catch(() => setCosts([]));
+    const loadCosts = async () => {
+      try {
+        const loginRes = await fetch("http://localhost:8000/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: "demo", password: "demo" }),
+        });
+        const loginData = await loginRes.json();
+        const token = loginData?.access_token;
+        if (!token) {
+          setCosts([]);
+          return;
+        }
+
+        const costsRes = await fetch("http://localhost:8000/api/v1/costs", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const costsData = await costsRes.json();
+        setCosts(costsData.items ?? []);
+      } catch {
+        setCosts([]);
+      }
+    };
+
+    loadCosts();
   }, []);
 
   return (

@@ -45,3 +45,9 @@ pytest -q
 
 ## Autor
 Team DevOps
+
+
+## GeoIP (opcjonalne)
+- Ustaw `SKIP_GEOIP_CHECK=true` dla demo/local bez bazy GeoIP.
+- Dla pełnego geo-enrichment zamontuj plik `GeoLite2-City.mmdb` pod ścieżką `GEOIP_DB` (domyślnie `/app/data/GeoLite2-City.mmdb`).
+- Przy starcie uruchamiany jest `download_geoip.sh`, który waliduje obecność bazy gdy check nie jest pomijany.

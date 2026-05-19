@@ -11,7 +11,13 @@ services:
       JWT_SECRET: ${JWT_SECRET:-change_me_32_chars_min}
       DUCKDB_PATH: /data/cloudbudget.duckdb
     ports: ["8100:8000"]
-    depends_on: [postgres, redis, rabbitmq]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - duckdb_data:/app/data
     restart: unless-stopped
@@ -32,7 +38,13 @@ services:
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672//
       JWT_SECRET: ${JWT_SECRET:-change_me_32_chars_min}
       DUCKDB_PATH: /data/cloudbudget.duckdb
-    depends_on: [postgres, redis, rabbitmq]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import celery; print('ok')"]
@@ -42,6 +54,11 @@ services:
 
   postgres:
     image: postgres:16
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cloudbudget -d cloudbudget"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
     environment:
       POSTGRES_DB: cloudbudget
@@ -51,6 +68,11 @@ services:
 
   redis:
     image: redis:7
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
     ports: ["56379:6379"]
 
@@ -69,7 +91,9 @@ services:
       context: ./frontend
     restart: unless-stopped
     ports: ["3100:3000"]
-    depends_on: [api]
+    depends_on:
+      api:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
