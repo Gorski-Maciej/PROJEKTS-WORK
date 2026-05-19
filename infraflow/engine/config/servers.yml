@@ -1,11 +1,7 @@
 servers:
   - name: web01
     host: 192.168.1.10
-    checks:
-      - type: cpu
-        threshold: 80
+    checks: [{ type: cpu, threshold: 80 }]
   - name: web02
     host: 192.168.1.11
-    checks:
-      - type: memory
-        threshold: 90
+    checks: [{ type: memory, threshold: 90 }]
