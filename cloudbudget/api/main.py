@@ -4,6 +4,11 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI(title="CloudBudget API")
 app.add_middleware(CORSMiddleware, allow_origins=["*"])
 
+@app.on_event("startup")
+async def startup():
+    from api.core.database import init_db
+    init_db()
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
