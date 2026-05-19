@@ -1,99 +1,80 @@
 # PROJEKTS-WORK
 
-Repozytorium ma **celowo minimalistyczną strukturę**:
+Repozytorium zawiera 4 niezależne projekty uruchamiane przez Docker Compose:
 
-```text
-PROJEKTS-WORK/
-├── README.md
-├── cloudbudget/
-├── infraflow/
-├── netguardian/
-└── netaegis/
-```
+- `cloudbudget/` – platforma FinOps do analizy i optymalizacji kosztów cloud.
+- `infraflow/` – platforma obserwowalności i automatyzacji operacyjnej infrastruktury.
+- `netguardian/` – platforma SecOps/SIEM/SOAR do monitorowania bezpieczeństwa sieci.
+- `netaegis/` – platforma agentowa z MCP do orkiestracji działań bezpieczeństwa.
 
-W katalogu głównym znajduje się wyłącznie ten plik oraz 4 katalogi projektowe. Wszystkie skrypty uruchomieniowe, pliki konfiguracyjne i pliki startowe znajdują się wewnątrz odpowiednich projektów.
+## Unikalność portów (docker-compose)
 
----
+Zweryfikowano pliki:
 
-## 1) cloudbudget/
+- `cloudbudget/docker-compose.yml`
+- `infraflow/docker-compose.yml`
+- `netguardian/docker-compose.yml`
+- `netaegis/docker-compose.yml`
 
-**CloudBudget 2.0** – autonomiczna platforma FinOps dla środowisk multi-cloud (AWS/Azure/GCP/on-prem).
+Wszystkie porty hosta są unikalne między projektami (brak kolizji).
 
-### Kluczowe elementy
-- Agregacja kosztów multi-cloud.
-- Rekomendacje optymalizacyjne (idle resources, rightsizing, itp.).
-- Symulacje kosztowe (what-if).
-- Predykcja kosztów i alerty budżetowe.
-- Automatyzacja wybranych akcji optymalizacyjnych.
+### Automatyczna weryfikacja
 
-### Szybki start
+W katalogu głównym znajduje się skrypt:
+
 ```bash
-cd cloudbudget
-cp .env.example .env
-bash scripts/setup.sh
+./verify_all_ports.sh
 ```
 
----
+Skrypt:
+1. parsuje mapowania portów z wszystkich plików `docker-compose.yml`,
+2. wykrywa duplikaty portów hosta,
+3. wyświetla raport końcowy i zwraca kod błędu przy konflikcie.
 
-## 2) infraflow/
+## Uruchamianie projektów
 
-**InfraFlow** – system monitorowania i samonaprawy infrastruktury (Linux/Windows) z regułami YAML.
+### Wszystkie projekty jednocześnie
 
-### Kluczowe elementy
-- Monitoring bezagentowy (SSH/WinRM).
-- Automatyczne akcje naprawcze (restart usług, porządki, itp.).
-- Audyt i historia incydentów.
-- Integracje powiadomień (np. Slack/email/webhook).
-
-### Szybki start
 ```bash
-cd infraflow
-cp .env.example .env
-bash scripts/setup.sh
+make all
 ```
 
----
+### Pojedynczy projekt
 
-## 3) netguardian/
+Uruchom wybrany projekt z jego katalogu:
 
-**NetGuardian 2.0** – platforma monitoringu i reakcji bezpieczeństwa sieciowego (SIEM/SOAR).
-
-### Kluczowe elementy
-- Detekcja anomalii i korelacja zdarzeń.
-- Automatyczna reakcja (np. blokady IP, playbooki).
-- Dashboard czasu rzeczywistego.
-- Integracje threat intelligence.
-
-### Szybki start
 ```bash
-cd netguardian
-cp .env.example .env
-bash scripts/setup.sh
+cd cloudbudget && docker compose up -d
+cd infraflow && docker compose up -d
+cd netguardian && docker compose up -d
+cd netaegis && docker compose up -d
 ```
 
----
+### Zatrzymywanie
 
-## 4) netaegis/
+Wszystkie:
 
-**NetAegis** – platforma SOAR oparta o architekturę agentową i centralny MCP.
-
-### Kluczowe elementy
-- Agenci zbierający dane i zdarzenia.
-- Centralny silnik reguł (MCP).
-- Orkiestracja reakcji na incydenty.
-- Interfejs operacyjny do obserwacji i sterowania.
-
-### Szybki start
 ```bash
-cd netaegis
-cp .env.example .env
-bash scripts/setup.sh
+make down
 ```
 
----
+Pojedynczo:
 
-## Zasada repo
+```bash
+cd <projekt> && docker compose down
+```
 
-- **1 README.md w root** (ten plik).
-- **4 katalogi = 4 projekty**.
-- Brak dodatkowych katalogów narzędziowych i dokumentacyjnych w root.
+## Rozwiązywanie problemów (checklista)
+
+1. **Pamięć RAM**
+   - Upewnij się, że Docker ma wystarczająco RAM (minimum 8 GB zalecane dla uruchamiania wszystkich stacków).
+   - Przy problemach z restartami kontenerów sprawdź `docker stats` oraz logi.
+
+2. **Porty**
+   - Przed startem uruchom `./verify_all_ports.sh`.
+   - Jeśli port jest zajęty lokalnie, zmień mapowanie tylko po stronie hosta w odpowiednim `docker-compose.yml`.
+
+3. **Zależności i środowisko**
+   - Sprawdź, czy Docker i Docker Compose działają poprawnie.
+   - Upewnij się, że pliki `.env` zostały utworzone tam, gdzie wymagane.
+   - W razie błędów uruchom `docker compose logs -f` w katalogu projektu i zweryfikuj brakujące sekrety/klucze.
