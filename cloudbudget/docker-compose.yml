@@ -8,11 +8,18 @@ services:
       DATABASE_URL: postgresql+psycopg://cloudbudget:cloudbudget@postgres:5432/cloudbudget
       REDIS_URL: redis://redis:6379/0
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672//
-      JWT_SECRET: ${JWT_SECRET:-demo}
+      JWT_SECRET: ${JWT_SECRET:-change_me_32_chars_min}
+      DUCKDB_PATH: /data/cloudbudget.duckdb
     ports: ["8100:8000"]
     depends_on: [postgres, redis, rabbitmq]
     volumes:
       - duckdb_data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs', timeout=3)"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
 
   worker:
     build:
@@ -23,11 +30,19 @@ services:
       DATABASE_URL: postgresql+psycopg://cloudbudget:cloudbudget@postgres:5432/cloudbudget
       REDIS_URL: redis://redis:6379/0
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672//
-      JWT_SECRET: ${JWT_SECRET:-demo}
+      JWT_SECRET: ${JWT_SECRET:-change_me_32_chars_min}
+      DUCKDB_PATH: /data/cloudbudget.duckdb
     depends_on: [postgres, redis, rabbitmq]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import celery; print('ok')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   postgres:
     image: postgres:16
+    restart: unless-stopped
     environment:
       POSTGRES_DB: cloudbudget
       POSTGRES_USER: cloudbudget
@@ -36,10 +51,12 @@ services:
 
   redis:
     image: redis:7
+    restart: unless-stopped
     ports: ["56379:6379"]
 
   rabbitmq:
     image: rabbitmq:3-management
+    restart: unless-stopped
     ports: ["55672:5672", "15673:15672"]
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
@@ -50,8 +67,14 @@ services:
   frontend:
     build:
       context: ./frontend
+    restart: unless-stopped
     ports: ["3100:3000"]
     depends_on: [api]
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  duckdb_data:
+  duckdb_data: {}

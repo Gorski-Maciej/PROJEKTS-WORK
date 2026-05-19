@@ -2,12 +2,14 @@ version: '3.9'
 
 services:
   zookeeper:
+    restart: unless-stopped
     image: confluentinc/cp-zookeeper:7.5.0
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
 
   kafka:
+    restart: unless-stopped
     image: confluentinc/cp-kafka:7.5.0
     depends_on:
       - zookeeper
@@ -25,11 +27,13 @@ services:
       retries: 5
 
   redis:
+    restart: unless-stopped
     image: redis:7-alpine
     ports:
       - "66379:6379"
 
   timescaledb:
+    restart: unless-stopped
     image: timescale/timescaledb:latest-pg14
     environment:
       POSTGRES_PASSWORD: netguardian
@@ -41,6 +45,7 @@ services:
 
 
   engine:
+    restart: unless-stopped
     build: ./engine
     working_dir: /app
     depends_on:
@@ -60,17 +65,23 @@ services:
       SSH_PRIVATE_KEY_FILE: /app/ssh/id_rsa
       SSH_AGENT_HOST: agent
       SSH_AGENT_USER: root
-      GEOIP_DB: /app/data/GeoLite2-City.mmdb  # requires manual GeoLite2 download
+      # GEOIP_DB: /app/data/GeoLite2-City.mmdb  # optional: mount GeoLite2 DB to enable geo-enrichment
+      JWT_SECRET: ${JWT_SECRET:-change_me_32_chars_min}
     ports:
       - "8300:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
     volumes:
       - ./engine:/app
       - ./engine/ssh:/app/ssh:ro
       - ./engine/data:/app/data
-      - /var/run/docker.sock:/var/run/docker.sock
       - duckdb_data:/data
 
   agent:
+    restart: unless-stopped
     build: ./agent
     depends_on:
       - kafka
@@ -84,6 +95,7 @@ services:
       - NET_RAW
 
   dashboard:
+    restart: unless-stopped
     build: ./dashboard
     depends_on:
       - engine
@@ -93,6 +105,7 @@ services:
       ENGINE_WS_URL: ws://engine:8000/ws
 
   prometheus:
+    restart: unless-stopped
     image: prom/prometheus
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
@@ -100,6 +113,7 @@ services:
       - "9390:9090"
 
   grafana:
+    restart: unless-stopped
     image: grafana/grafana
     ports:
       - "3300:3000"
