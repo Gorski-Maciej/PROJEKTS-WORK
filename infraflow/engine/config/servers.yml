@@ -1,34 +1,11 @@
-global:
-  check_interval: 300
 servers:
-  - name: web-prod-01
-    host: 127.0.0.1
-    user: root
-    key_file: /app/keys/id_rsa
+  - name: web01
+    host: 192.168.1.10
     checks:
       - type: cpu
         threshold: 80
-        actions:
-          - type: restart_service
-            target: nginx
-            condition: "cpu > 90"
-          - type: send_slack
-            message: "CPU high on {server.name}: {metric}%"
+  - name: web02
+    host: 192.168.1.11
+    checks:
       - type: memory
-        threshold: 85
-        actions:
-          - type: clean_logs
-            path: /var/log
-            condition: "memory > 95"
-
-      - type: package_updates
-        params:
-          manager: apt
-        threshold: 10
-        actions:
-          - type: auto_patch
-            params:
-              manager: apt
-            condition: "available_updates > 10"
-          - type: send_slack
-            message: "Server {server.name} has {metric} pending updates"
+        threshold: 90
