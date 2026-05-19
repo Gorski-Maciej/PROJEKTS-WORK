@@ -1,10 +1,8 @@
-FROM python:3.12-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY agents/netconfig/requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir -r /tmp/requirements.txt
+RUN pip install --no-cache-dir fastapi uvicorn
+COPY agents/netconfig/main.py /app/main.py
 
-COPY agents /app/agents
-
-CMD ["python", "-m", "agents.netconfig.agent"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

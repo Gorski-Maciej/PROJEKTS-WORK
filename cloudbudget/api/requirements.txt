@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+asyncpg
+duckdb
+redis
+celery
+pydantic-settings
+python-dotenv
+httpx
