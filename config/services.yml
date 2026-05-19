@@ -1,0 +1,49 @@
+environments:
+  dev:
+    suffix: dev
+  staging:
+    suffix: stg
+  prod:
+    suffix: prod
+
+shared_required:
+  - ENVIRONMENT
+  - LOG_LEVEL
+
+services:
+  cloudbudget:
+    env_file: cloudbudget/.env
+    jwt_required: true
+    ports:
+      - 8001
+      - 5433
+      - 6379
+      - 5672
+    health:
+      endpoint: /health
+      timeout: 5
+    dependencies: [postgresql, redis, rabbitmq]
+  infraflow:
+    env_file: infraflow/.env
+    jwt_required: true
+    ports: [8100, 5434, 6380, 9090, 3000]
+    health:
+      endpoint: /health
+      timeout: 5
+    dependencies: [timescaledb, redis]
+  netguardian:
+    env_file: netguardian/.env
+    jwt_required: true
+    ports: [8200, 5435, 6381, 9092]
+    health:
+      endpoint: /health
+      timeout: 5
+    dependencies: [postgresql, kafka, duckdb]
+  netaegis:
+    env_file: netaegis/.env
+    jwt_required: false
+    ports: [8300, 6382, 9100]
+    health:
+      endpoint: /health
+      timeout: 5
+    dependencies: [redis, websocket]
