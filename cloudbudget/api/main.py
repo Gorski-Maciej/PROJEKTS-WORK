@@ -59,7 +59,7 @@ async def startup() -> None:
 
 @app.get("/health")
 async def health() -> dict[str, str]:
-    return {"status": "ok", "service": "cloudbudget-api"}
+    return {"status": "ok"}
 
 
 @app.get("/api/v1/costs")

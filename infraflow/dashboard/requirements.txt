@@ -1,3 +1,2 @@
-flet
-requests
-websocket-client
+flet==0.22.0
+websockets==12.0
