@@ -1,7 +1,11 @@
-export default function App() {
+import React from 'react';
+
+function App() {
   return (
-    <main>
+    <div>
       <h1>NetAegis Dashboard</h1>
-    </main>
+      <p>Agents online: 3</p>
+    </div>
   );
 }
+export default App;

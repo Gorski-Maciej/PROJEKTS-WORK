@@ -1,51 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
-type CostItem = {
-  service: string;
-  monthly_cost: number;
-};
+interface Cost { id: number; service: string; amount: number; date: string; }
 
 export default function App() {
-  const [costs, setCosts] = useState<CostItem[]>([]);
-
+  const [costs, setCosts] = useState<Cost[]>([]);
   useEffect(() => {
-    const loadCosts = async () => {
-      try {
-        const loginRes = await fetch("http://localhost:8000/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: "demo", password: "demo" }),
-        });
-        const loginData = await loginRes.json();
-        const token = loginData?.access_token;
-        if (!token) {
-          setCosts([]);
-          return;
-        }
-
-        const costsRes = await fetch("http://localhost:8000/api/v1/costs", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const costsData = await costsRes.json();
-        setCosts(costsData.items ?? []);
-      } catch {
-        setCosts([]);
-      }
-    };
-
-    loadCosts();
+    fetch('http://localhost:8100/api/v1/costs')
+      .then(r => r.json()).then(setCosts).catch(console.error);
   }, []);
-
   return (
-    <main>
+    <div style={{ padding: 20 }}>
       <h1>CloudBudget Dashboard</h1>
-      <ul>
-        {costs.map((item) => (
-          <li key={item.service}>
-            {item.service}: ${item.monthly_cost}
-          </li>
-        ))}
-      </ul>
-    </main>
+      <ul>{costs.map(c => <li key={c.id}>{c.service}: ${c.amount}</li>)}</ul>
+    </div>
   );
 }
