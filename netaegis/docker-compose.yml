@@ -61,6 +61,8 @@ services:
     depends_on:
       operational_mcp:
         condition: service_healthy
+    volumes:
+      - agent_configs:/app/.agent-configs
 
   seclog_agent:
     restart: unless-stopped
@@ -69,6 +71,8 @@ services:
       dockerfile: agents/seclog/Dockerfile
     volumes:
       - /var/log:/var/log:ro
+      - agent_configs:/app/.agent-configs
+      - seclog_cache:/app/cache
     environment:
       OPERATIONAL_MCP_URL: http://operational_mcp:8001
       SECLOG_AGENT_ID: seclog-01
@@ -82,13 +86,20 @@ services:
     build:
       context: .
       dockerfile: agents/netconfig/Dockerfile
+    volumes:
+      - netconfig_local:/app/.agent-configs
     environment:
       OPERATIONAL_MCP_URL: http://operational_mcp:8001
       NETCONFIG_AGENT_ID: netconfig-01
       NETCONFIG_LOCAL_REPO: /app/.agent-configs
       NETCONFIG_DEVICE_IP: 192.168.1.1
-      NETCONFIG_DEVICE_USERNAME: admin
-      NETCONFIG_DEVICE_PASSWORD: admin
+      NETCONFIG_DEVICE_USERNAME: ${NETCONFIG_DEVICE_USERNAME}
+      NETCONFIG_DEVICE_PASSWORD: ${NETCONFIG_DEVICE_PASSWORD}
     depends_on:
       operational_mcp:
         condition: service_healthy
+
+volumes:
+  agent_configs:
+  seclog_cache:
+  netconfig_local:

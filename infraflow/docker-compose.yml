@@ -3,6 +3,11 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
 
   timescaledb:
     restart: unless-stopped
@@ -23,7 +28,11 @@ services:
     build:
       context: ./engine
       dockerfile: Dockerfile
-    depends_on: [redis, timescaledb]
+    depends_on:
+      redis:
+        condition: service_healthy
+      timescaledb:
+        condition: service_healthy
     env_file: .env
     environment:
       REDIS_HOST: redis
@@ -40,7 +49,11 @@ services:
     build:
       context: ./engine
       dockerfile: Dockerfile
-    depends_on: [redis, timescaledb]
+    depends_on:
+      redis:
+        condition: service_healthy
+      timescaledb:
+        condition: service_healthy
     env_file: .env
     environment:
       REDIS_HOST: redis
@@ -52,7 +65,7 @@ services:
       - ./engine:/app
       - ./keys:/app/keys:ro
     healthcheck:
-      test: ["CMD", "python", "-c", "print('ok')"]
+      test: ["CMD", "python", "-c", "import redis; redis.Redis(host='redis').ping()"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -60,7 +73,9 @@ services:
   dashboard:
     restart: unless-stopped
     build: ./dashboard
-    depends_on: [engine]
+    depends_on:
+      engine:
+        condition: service_healthy
     ports: ["8081:8080"]
     environment:
       ENGINE_URL: http://engine:8000

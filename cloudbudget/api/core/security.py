@@ -3,7 +3,7 @@ from jose import jwt
 from passlib.context import CryptContext
 from api.core.config import settings
 
-pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_ctx = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 
 def hash_password(password: str) -> str:
@@ -27,3 +27,7 @@ def create_access_token(subject: str, tenant_id: int, expires_minutes: int = 60)
 
 def decode_access_token(token: str) -> dict:
     return jwt.decode(token, settings.jwt_secret, algorithms=["HS256"])
+
+
+def verify_access_token(token: str) -> dict:
+    return decode_access_token(token)

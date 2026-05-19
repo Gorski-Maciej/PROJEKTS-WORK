@@ -22,6 +22,16 @@ async def kafka_consumer_simulator() -> None:
 
 @app.on_event("startup")
 async def startup_event() -> None:
+    skip_geoip = os.getenv("SKIP_GEOIP_CHECK", "true").lower() == "true"
+    geoip_db = os.getenv("GEOIP_DB", "/app/data/GeoLite2-City.mmdb")
+    if skip_geoip:
+        logger.info("Skipping GeoIP DB validation (SKIP_GEOIP_CHECK=true)")
+    else:
+        try:
+            with open(geoip_db, "rb"):
+                logger.info("GeoIP DB detected at %s", geoip_db)
+        except Exception as exc:
+            logger.warning("GeoIP DB unavailable at %s: %s", geoip_db, exc)
     asyncio.create_task(kafka_consumer_simulator())
 
 
