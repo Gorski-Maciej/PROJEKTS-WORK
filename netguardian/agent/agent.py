@@ -1,25 +1,15 @@
-from __future__ import annotations
-
-import json
-import os
-import random
-import time
-
+import json, time, random, os
 from confluent_kafka import Producer
 
-bootstrap = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
-topic = "netguardian.raw_flows"
-producer = Producer({"bootstrap.servers": bootstrap})
-
+producer = Producer({'bootstrap.servers': os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'kafka:9092')})
 
 while True:
-    payload = {
-        "src_ip": f"10.0.0.{random.randint(1, 254)}",
-        "dst_ip": f"192.168.1.{random.randint(1, 254)}",
-        "bytes": random.randint(64, 2048),
-        "protocol": random.choice(["TCP", "UDP"]),
+    flow = {
+        "timestamp": time.time(),
+        "src_ip": f"192.168.{random.randint(1,10)}.{random.randint(2,254)}",
+        "dst_ip": "10.0.0.1",
+        "length": random.randint(40, 1500)
     }
-    producer.produce(topic, json.dumps(payload).encode("utf-8"))
-    producer.flush()
-    print(f"sent flow to {topic}: {payload}")
-    time.sleep(5)
+    producer.produce('netguardian.raw_flows', json.dumps(flow).encode())
+    producer.poll(0)
+    time.sleep(random.uniform(0.1, 0.5))
