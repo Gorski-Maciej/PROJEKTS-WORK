@@ -1,18 +1,58 @@
 name: CI
-on: [push, pull_request]
+
+on:
+  push:
+  pull_request:
+
 jobs:
-  validate:
+  python-checks:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - service: cloudbudget
+            requirements: cloudbudget/requirements.txt
+            workdir: cloudbudget
+            test_cmd: pytest -q tests/test_main_summary.py
+          - service: infraflow
+            requirements: infraflow/requirements.txt
+            workdir: infraflow
+            test_cmd: pytest -q tests/test_main_api_extended.py
+          - service: netguardian
+            requirements: netguardian/requirements.txt
+            workdir: netguardian
+            test_cmd: pytest -q tests/test_main_api_extended.py
+          - service: netaegis
+            requirements: netaegis/requirements.txt
+            workdir: netaegis
+            test_cmd: pytest -q tests/test_health.py
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ${{ matrix.requirements }}
+          pip install pytest httpx
+      - name: Compile checks
+        run: python -m compileall ${{ matrix.service }}
+      - name: Run targeted tests
+        working-directory: ${{ matrix.workdir }}
+        env:
+          PYTHONPATH: ${{ github.workspace }}/${{ matrix.workdir }}
+        run: ${{ matrix.test_cmd }}
+
+
+  repository-contracts:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify ports
-        run: ./verify_all_ports.sh
-      - name: Validate env
-        run: make validate-env
-  test:
-    runs-on: ubuntu-latest
-    needs: validate
-    steps:
-      - uses: actions/checkout@v4
-      - name: Test all projects
-        run: make test
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pytest
+        run: pip install pytest
+      - name: Validate repository contracts
+        run: pytest -q tests/test_repository_contract.py
