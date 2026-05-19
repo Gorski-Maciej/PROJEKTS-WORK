@@ -1,63 +1,84 @@
-from fastapi import FastAPI
-from api.core.config import settings
-from api.core.database import init_db
-from api.routers import (
-    health,
-    costs,
-    recommendations,
-    simulations,
-    budgets,
-    predictions,
-    realtime,
-    actions,
-    alerts,
-    invoices,
-    graphql_api,
-    metrics,
-    exports,
-    reconciliation,
-    auth,
-    optimizations,
-    chargeback,
-    autopilot,
-    notifications,
-    kubernetes,
-    invoice_reconciliation,
-    reports,
-    whatif, dlq,
-    multicloud,
-)
+from __future__ import annotations
 
-init_db()
+import os
+from typing import Any
 
-app = FastAPI(title=settings.app_name, version="2.2.0")
-app.include_router(health.router, prefix=settings.api_prefix)
-app.include_router(costs.router, prefix=settings.api_prefix)
-app.include_router(recommendations.router, prefix=settings.api_prefix)
-app.include_router(simulations.router, prefix=settings.api_prefix)
-app.include_router(budgets.router, prefix=settings.api_prefix)
-app.include_router(predictions.router, prefix=settings.api_prefix)
-app.include_router(actions.router, prefix=settings.api_prefix)
-app.include_router(alerts.router, prefix=settings.api_prefix)
-app.include_router(invoices.router, prefix=settings.api_prefix)
-app.include_router(graphql_api.router, prefix=settings.api_prefix)
-app.include_router(metrics.router)
-app.include_router(exports.router, prefix=settings.api_prefix)
-app.include_router(reconciliation.router, prefix=settings.api_prefix)
-app.include_router(auth.router, prefix=settings.api_prefix)
-app.include_router(optimizations.router, prefix=settings.api_prefix)
-app.include_router(chargeback.router, prefix=settings.api_prefix)
-app.include_router(autopilot.router, prefix=settings.api_prefix)
-app.include_router(notifications.router, prefix=settings.api_prefix)
-app.include_router(kubernetes.router, prefix=settings.api_prefix)
-app.include_router(invoice_reconciliation.router, prefix=settings.api_prefix)
-app.include_router(reports.router, prefix=settings.api_prefix)
-app.include_router(whatif.router, prefix=settings.api_prefix)
-app.include_router(dlq.router, prefix=settings.api_prefix)
-app.include_router(multicloud.router, prefix=settings.api_prefix)
-app.include_router(realtime.router)
+import duckdb
+from fastapi import Depends, FastAPI, Header, HTTPException, status
+from pydantic import BaseModel
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+
+app = FastAPI(title="CloudBudget API")
+
+DUCKDB_CONN: duckdb.DuckDBPyConnection | None = None
+PG_ENGINE: AsyncEngine | None = None
 
 
-@app.get("/")
-async def root() -> dict:
-    return {"service": "cloudbudget", "version": "2.2.0"}
+class RecommendationRequest(BaseModel):
+    service: str
+    monthly_cost: float
+
+
+def require_demo_token(authorization: str = Header(default="")) -> str:
+    if authorization != "Bearer demo":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+        )
+    return "demo"
+
+
+@app.on_event("startup")
+async def startup() -> None:
+    global DUCKDB_CONN, PG_ENGINE
+
+    duckdb_path = os.getenv("DUCKDB_PATH", "/tmp/cloudbudget.duckdb")
+    DUCKDB_CONN = duckdb.connect(duckdb_path)
+    DUCKDB_CONN.execute(
+        "CREATE TABLE IF NOT EXISTS costs(service VARCHAR, monthly_cost DOUBLE)"
+    )
+    if DUCKDB_CONN.execute("SELECT COUNT(*) FROM costs").fetchone()[0] == 0:
+        DUCKDB_CONN.executemany(
+            "INSERT INTO costs VALUES (?, ?)",
+            [("EC2", 320.5), ("S3", 95.2), ("RDS", 210.1)],
+        )
+
+    pg_url = os.getenv(
+        "POSTGRES_URL",
+        "postgresql+asyncpg://postgres:postgres@localhost:5432/cloudbudget",
+    )
+    PG_ENGINE = create_async_engine(pg_url, echo=False)
+    try:
+        async with PG_ENGINE.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+    except Exception:
+        # Demo mode: allow startup even when Postgres is not yet reachable.
+        pass
+
+
+@app.get("/health")
+async def health() -> dict[str, str]:
+    return {"status": "ok", "service": "cloudbudget-api"}
+
+
+@app.get("/api/v1/costs")
+async def get_costs(_: str = Depends(require_demo_token)) -> dict[str, Any]:
+    rows = DUCKDB_CONN.execute("SELECT service, monthly_cost FROM costs").fetchall() if DUCKDB_CONN else []
+    return {
+        "items": [
+            {"service": row[0], "monthly_cost": row[1]} for row in rows
+        ]
+    }
+
+
+@app.post("/api/v1/recommendations")
+async def create_recommendation(
+    payload: RecommendationRequest,
+    _: str = Depends(require_demo_token),
+) -> dict[str, Any]:
+    suggested = round(payload.monthly_cost * 0.15, 2)
+    return {
+        "service": payload.service,
+        "recommendation": f"Potential monthly savings: ${suggested}",
+    }
