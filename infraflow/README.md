@@ -40,3 +40,16 @@ pytest -q
 
 ## Autor
 Team DevOps
+
+
+## Zmienne środowiskowe (nowe/istotne)
+- `JWT_SECRET` (min. 32 znaki).
+- `DATABASE_URL`, `REDIS_HOST`, `CONFIG_PATH`.
+
+## Kolejność uruchamiania
+- `engine` i `worker` startują po `redis` i `timescaledb` (`depends_on.condition: service_healthy`).
+- `worker` ma healthcheck Redis z `timeout: 10s`.
+
+## Troubleshooting
+- Jeśli worker jest `unhealthy`, sprawdź połączenie do Redis (`docker compose logs worker`).
+- Jeśli API nie startuje, zweryfikuj `.env` i `JWT_SECRET` przez `make validate-env`.

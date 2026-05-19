@@ -1,22 +1,6 @@
-# Python
-__pycache__/
-*.py[cod]
-*.so
-.pytest_cache/
-
-# Env files
 **/.env
-
-# Node
-node_modules/
-
-# Local runtime data
-**/data/
-
-# IDE
-.vscode/
-.idea/
-
 *.pyc
+__pycache__/
+node_modules/
 *.db
-.env
+.duckdb/

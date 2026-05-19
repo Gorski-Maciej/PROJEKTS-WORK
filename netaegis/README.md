@@ -39,3 +39,22 @@ pytest -q
 
 ## Autor
 Team DevOps
+
+
+## Zmienne środowiskowe (nowe/istotne)
+- `NETCONFIG_DEVICE_USERNAME=CHANGE_ME`
+- `NETCONFIG_DEVICE_PASSWORD=CHANGE_ME`
+- Ustaw bezpieczne wartości w lokalnym `.env` (bez hardcoded defaultów typu `admin/admin`).
+
+## Wolumeny agentów
+- `agent_configs:/app/.agent-configs` (netpulse, seclog)
+- `seclog_cache:/app/cache` (seclog)
+- `netconfig_local:/app/.agent-configs` (netconfig)
+
+## Endpointy / health
+- Main MCP: `GET /api/realtime/health`
+- Operational MCP: `GET /api/status/`
+
+## Troubleshooting
+- Jeśli agent nie startuje, sprawdź, czy wolumeny named volumes są utworzone i podpięte.
+- Przy błędach NetConfig zweryfikuj zmienne `NETCONFIG_DEVICE_*` w `.env`.

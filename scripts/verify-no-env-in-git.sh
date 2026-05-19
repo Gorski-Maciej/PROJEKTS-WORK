@@ -1,9 +1,6 @@
-#!/usr/bin/env sh
-set -eu
-tracked=$(git ls-files | grep -E "(^|/)\.env$" || true)
-if [ -n "$tracked" ]; then
-  echo "Tracked .env files detected:"
-  echo "$tracked"
-  exit 1
+#!/bin/bash
+if git ls-files "**/.env" | grep -q .; then
+    echo "ERROR: .env files tracked by Git"
+    exit 1
 fi
-echo "No tracked .env files found."
+echo ".env files not in Git - OK"
