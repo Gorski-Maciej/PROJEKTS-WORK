@@ -5,7 +5,13 @@ services:
     restart: unless-stopped
 
   timescaledb:
+    restart: unless-stopped
     image: timescale/timescaledb:latest-pg14
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d infraflow"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
     environment:
       POSTGRES_PASSWORD: infraflow
       POSTGRES_DB: infraflow
@@ -13,26 +19,34 @@ services:
     volumes: ["timescale_data:/var/lib/postgresql/data"]
 
   engine:
-    build: ./engine
+    restart: unless-stopped
+    build:
+      context: ./engine
+      dockerfile: Dockerfile
     depends_on: [redis, timescaledb]
     env_file: .env
     environment:
       REDIS_HOST: redis
       DATABASE_URL: postgresql://postgres:infraflow@timescaledb:5432/infraflow
       CONFIG_PATH: /app/config/servers.yml
+      JWT_SECRET: ${JWT_SECRET}
     ports: ["8001:8000"]
     volumes:
       - ./engine:/app
       - ./keys:/app/keys:ro
 
   worker:
-    build: ./engine
+    restart: unless-stopped
+    build:
+      context: ./engine
+      dockerfile: Dockerfile
     depends_on: [redis, timescaledb]
     env_file: .env
     environment:
       REDIS_HOST: redis
       DATABASE_URL: postgresql://postgres:infraflow@timescaledb:5432/infraflow
       CONFIG_PATH: /app/config/servers.yml
+      JWT_SECRET: ${JWT_SECRET}
     command: ["python","worker/queue_worker.py"]
     volumes:
       - ./engine:/app
@@ -44,6 +58,7 @@ services:
       retries: 3
 
   dashboard:
+    restart: unless-stopped
     build: ./dashboard
     depends_on: [engine]
     ports: ["8081:8080"]
@@ -51,12 +66,14 @@ services:
       ENGINE_URL: http://engine:8000
 
   prometheus:
+    restart: unless-stopped
     image: prom/prometheus
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     ports: ["9290:9090"]
 
   grafana:
+    restart: unless-stopped
     image: grafana/grafana:latest
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
