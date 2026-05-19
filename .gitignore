@@ -16,3 +16,7 @@ node_modules/
 # IDE
 .vscode/
 .idea/
+
+*.pyc
+*.db
+.env
