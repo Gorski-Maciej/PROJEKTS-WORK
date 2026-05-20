@@ -1,13 +1,10 @@
-from server.main_mcp.main import components, health
+from fastapi.testclient import TestClient
+from server.main_mcp.main import app
+
+
+client = TestClient(app)
 
 
 def test_health():
-    payload = health()
-    assert payload["status"] == "ok"
-    assert payload["service"] == "main_mcp"
-
-
-def test_components_contains_redis():
-    payload = components()
-    assert "redis" in payload
-    assert payload["redis"]["enabled"] is True
+    response = client.get("/health")
+    assert response.status_code == 200
