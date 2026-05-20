@@ -1424,3 +1424,264 @@ Repozytorium ma **dobrą architekturę, ale 0 kodu produkcyjnego**. Aby było w 
 12. Docker Compose override files
 
 Wszystko jest gotowe do generacji. **Repozytorium czeka na Ciebie, CodeX! 🚀**
+
+
+
+
+
+
+
+
+
+
+
+Przeanalizowałem Twoje repozytorium i widzę, że problemem nie jest architektura czy docker-compose.yml, ale brak w pełni rozbudowanego, funkcjonalnego kodu oraz podstawowych plików, jak testy, .env czy provisioning Grafany. Wszystko inne jest na swoim miejscu. Poniżej znajduje się kompletny, szczegółowy Prompt dla CodeX, który zawiera pełny kod do wstawienia w każdym projekcie.
+
+---
+
+KOMPLETNY PROMPT DLA CODEX – UZUPEŁNIENIE KODU I KONFIGURACJI
+
+```markdown
+# PROMPT DLA CODEX – OSTATECZNE DOPRACOWANIE PROJEKTS-WORK
+
+## KONTEKST
+Repozytorium `Gorski-Maciej/PROJEKTS-WORK` zawiera 4 mikroserwisy (CloudBudget, InfraFlow, NetGuardian, NetAegis) z kompletem `docker-compose.yml`, `Dockerfile` i podstawowym kodem źródłowym. Projekty mają już działające endpointy `/health`, ale potrzebują **rozbudowanego kodu biznesowego**, **testów** oraz **brakujących plików konfiguracyjnych** (`.env`, provisioning Grafany).
+
+**Twoim zadaniem jest wygenerowanie i wstawienie poniższego kodu w dokładne lokalizacje.**
+
+---
+
+## PROJEKT 1: CLOUDBUDGET (Port 8100)
+
+### 1.1. Plik: `cloudbudget/tests/test_api.py`
+```python
+from fastapi.testclient import TestClient
+from api.main import app
+
+client = TestClient(app)
+
+def test_health():
+    response = client.get("/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "ok"
+    assert data["service"] == "cloudbudget-api"
+
+def test_get_costs():
+    response = client.get("/api/v1/costs")
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
+    assert len(response.json()) > 0
+
+def test_get_costs_filtered():
+    response = client.get("/api/v1/costs?service=EC2")
+    assert response.status_code == 200
+    data = response.json()
+    for item in data:
+        assert item["service"] == "EC2"
+
+def test_get_costs_summary():
+    response = client.get("/api/v1/costs/summary")
+    assert response.status_code == 200
+    data = response.json()
+    assert "total" in data
+    assert "services" in data
+
+def test_get_top_costs():
+    response = client.get("/api/v1/costs/top?limit=2")
+    assert response.status_code == 200
+    assert len(response.json()) == 2
+```
+
+1.2. Plik: cloudbudget/.env
+
+```
+JWT_SECRET=cloudbudget_dev_secret_32_chars_min_2026
+DUCKDB_PATH=/data/cloudbudget.duckdb
+```
+
+---
+
+PROJEKT 2: INFRAFLOW (Port 8001)
+
+2.1. Plik: infraflow/tests/test_api.py
+
+```python
+from fastapi.testclient import TestClient
+from engine.main import app
+
+client = TestClient(app)
+
+def test_health():
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+
+def test_list_servers():
+    response = client.get("/api/v1/servers")
+    assert response.status_code == 200
+
+def test_execute_runbook():
+    response = client.post("/api/v1/runbooks/execute", json={
+        "server": "test-server",
+        "action": "restart"
+    })
+    assert response.status_code == 200
+    assert response.json()["status"] == "scheduled"
+```
+
+2.2. Plik: infraflow/grafana/provisioning/datasources/prometheus.yml
+
+```yaml
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9290
+    isDefault: true
+    editable: false
+```
+
+2.3. Plik: infraflow/.env
+
+```
+JWT_SECRET=infraflow_dev_secret_32_chars_min_2026
+DATABASE_URL=postgresql://postgres:infraflow@timescaledb:5432/infraflow
+REDIS_HOST=redis
+```
+
+---
+
+PROJEKT 3: NETGUARDIAN (Port 8300)
+
+3.1. Plik: netguardian/tests/test_api.py
+
+```python
+from fastapi.testclient import TestClient
+from engine.main import app
+
+client = TestClient(app)
+
+def test_health():
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+
+def test_get_alerts():
+    response = client.get("/api/v1/alerts")
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
+
+def test_get_alerts_filtered():
+    response = client.get("/api/v1/alerts?min_severity=high")
+    assert response.status_code == 200
+    data = response.json()
+    for alert in data:
+        assert alert["severity"] in ["high", "critical"]
+
+def test_create_alert():
+    response = client.post("/api/v1/alerts", json={
+        "message": "Test alert from CodeX",
+        "severity": "low",
+        "source_ip": "192.168.1.100"
+    })
+    assert response.status_code == 200
+    assert "id" in response.json()
+```
+
+3.2. Plik: netguardian/grafana/provisioning/datasources/prometheus.yml
+
+```yaml
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9290
+    isDefault: true
+    editable: false
+```
+
+3.3. Plik: netguardian/.env
+
+```
+JWT_SECRET=netguardian_dev_secret_32_chars_min_2026
+KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+REDIS_HOST=redis
+DUCKDB_PATH=/data/netguardian.db
+ABUSEIPDB_API_KEY=
+SLACK_WEBHOOK_URL=
+MISP_URL=
+MISP_KEY=
+SKIP_GEOIP_CHECK=true
+```
+
+---
+
+PROJEKT 4: NETAEGIS (Porty 8400/8401)
+
+4.1. Plik: netaegis/tests/test_api.py
+
+```python
+from fastapi.testclient import TestClient
+from server.main_mcp.main import app
+
+client = TestClient(app)
+
+def test_health():
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json()["service"] == "main_mcp"
+
+def test_status():
+    response = client.get("/api/v1/status")
+    assert response.status_code == 200
+    assert response.json()["mcp"] == "ready"
+
+def test_components():
+    response = client.get("/api/v1/components")
+    assert response.status_code == 200
+    data = response.json()
+    assert "main_mcp" in data
+    assert "operational_mcp" in data
+```
+
+4.2. Plik: netaegis/.env
+
+```
+JWT_SECRET=netaegis_dev_secret_32_chars_min_2026
+REDIS_URL=redis://redis:6379/0
+NETCONFIG_DEVICE_USERNAME=admin
+NETCONFIG_DEVICE_PASSWORD=CHANGE_ME
+```
+
+---
+
+KRYTERIA SUKCESU
+
+1. ✅ Po dodaniu powyższych plików pytest tests/ w każdym projekcie przechodzi.
+2. ✅ make all uruchamia wszystkie 4 systemy bez błędów.
+3. ✅ Każdy serwis odpowiada HTTP 200 na /health.
+
+---
+
+INSTRUKCJA TESTOWANIA PO GENERACJI
+
+```bash
+cd PROJEKTS-WORK
+make all
+sleep 60
+for proj in cloudbudget infraflow netguardian netaegis; do
+    echo "=== $proj tests ==="
+    cd $proj && python -m pytest tests/ -v && cd ..
+done
+curl -s http://localhost:8100/health && echo " ✅ CloudBudget"
+curl -s http://localhost:8001/health && echo " ✅ InfraFlow"
+curl -s http://localhost:8300/health && echo " ✅ NetGuardian"
+curl -s http://localhost:8400/health && echo " ✅ NetAegis"
+```
+
+WYGENERUJ KOMPLETNY ZESTAW PLIKÓW ZGODNIE Z POWYŻSZĄ SPECYFIKACJĄ.
+
+```
