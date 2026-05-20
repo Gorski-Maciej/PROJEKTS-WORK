@@ -14,8 +14,7 @@ down:
 	done
 
 test:
-	@echo "Test execution is intentionally disabled in this repository-level workflow."
-	@echo "Use project-specific commands when needed."
+	@echo "Tests are intentionally skipped in this workflow."
 
 check:
 	@$(MAKE) validate-env

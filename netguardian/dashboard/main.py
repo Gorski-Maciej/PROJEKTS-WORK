@@ -1,11 +1,16 @@
 import asyncio
 import json
+import logging
 import os
 
 import flet as ft
 import websockets
 
 ENGINE_WS_URL = os.getenv("ENGINE_WS_URL", "ws://localhost:8001/ws")
+WS_RECONNECT_SECONDS = float(os.getenv("WS_RECONNECT_SECONDS", "3"))
+
+logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
+logger = logging.getLogger("netguardian-dashboard")
 
 
 class AlertDashboard:
@@ -14,20 +19,32 @@ class AlertDashboard:
         self.status_text = ft.Text("Disconnected")
 
     async def connect_websocket(self, page: ft.Page):
-        async with websockets.connect(ENGINE_WS_URL) as websocket:
-            self.status_text.value = "Connected"
-            page.update()
-            while True:
-                message = await websocket.recv()
-                alert = json.loads(message)
-                self.alerts_list.controls.append(
-                    ft.ListTile(
-                        title=ft.Text(f"Alert from {alert['src_ip']}"),
-                        subtitle=ft.Text(f"Score: {alert['score']:.3f}"),
-                        leading=ft.Icon(ft.icons.WARNING),
-                    )
-                )
+        while True:
+            try:
+                self.status_text.value = "Connecting..."
                 page.update()
+
+                async with websockets.connect(ENGINE_WS_URL) as websocket:
+                    self.status_text.value = "Connected"
+                    page.update()
+                    logger.info("connected to %s", ENGINE_WS_URL)
+
+                    while True:
+                        message = await websocket.recv()
+                        alert = json.loads(message)
+                        self.alerts_list.controls.append(
+                            ft.ListTile(
+                                title=ft.Text(f"Alert from {alert.get('src_ip', 'unknown')}"),
+                                subtitle=ft.Text(f"Score: {alert.get('score', 0):.3f}"),
+                                leading=ft.Icon(ft.icons.WARNING),
+                            )
+                        )
+                        page.update()
+            except Exception as exc:  # keep dashboard alive on transient websocket failures
+                logger.warning("websocket error: %s", exc)
+                self.status_text.value = f"Disconnected (retry in {WS_RECONNECT_SECONDS:.0f}s)"
+                page.update()
+                await asyncio.sleep(WS_RECONNECT_SECONDS)
 
 
 def main(page: ft.Page):
