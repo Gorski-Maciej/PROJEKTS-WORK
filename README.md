@@ -78,3 +78,21 @@ cd <projekt> && docker compose down
    - Sprawdź, czy Docker i Docker Compose działają poprawnie.
    - Upewnij się, że pliki `.env` zostały utworzone tam, gdzie wymagane.
    - W razie błędów uruchom `docker compose logs -f` w katalogu projektu i zweryfikuj brakujące sekrety/klucze.
+
+## Audyt repozytorium i walidacja konfiguracji
+
+Aby utrzymać spójność z planem audytu (`wed_may_20_2026_project_audit_and_code_generation_plan (1).md`), dostępne są ujednolicone komendy:
+
+```bash
+make validate-env
+make audit
+make check
+```
+
+Co robią komendy:
+- `make validate-env` — uruchamia walidację `.env.example` względem interpolacji w `docker-compose.yml` oraz sprawdza podstawową składnię/duplikaty kluczy.
+- `make audit` — uruchamia audyt obecności krytycznych plików i niepustych entrypointów usług.
+- `make check` — uruchamia pełny zestaw walidacji repozytorium (validate-env, audit, verify-ports) bez wykonywania testów.
+
+Szczegółowy opis znajduje się w pliku:
+- `docs_REPO_AUDIT.md`
