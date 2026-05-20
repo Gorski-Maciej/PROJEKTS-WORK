@@ -14,3 +14,8 @@ app.include_router(agents_router)
 app.include_router(sync_router)
 app.include_router(actions_router)
 app.include_router(status_router)
+
+
+@app.get("/health")
+def health() -> dict:
+    return {"status": "ok", "service": "operational_mcp"}

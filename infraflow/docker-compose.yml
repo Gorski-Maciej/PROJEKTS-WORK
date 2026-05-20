@@ -3,6 +3,8 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 15s
@@ -99,4 +101,6 @@ services:
 
 volumes:
   timescale_data:
+    driver: local
+  redis_data:
     driver: local
