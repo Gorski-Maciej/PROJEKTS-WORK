@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import time
+import urllib.error
+import urllib.request
 from dataclasses import dataclass
-
-import requests
 
 
 @dataclass
@@ -16,8 +16,19 @@ class HealthSpec:
 
 
 def check_api(base_url: str, spec: HealthSpec) -> bool:
-    resp = requests.request(spec.method, f"{base_url}{spec.endpoint}", timeout=spec.timeout)
-    return resp.status_code in spec.expected_status
+    request = urllib.request.Request(
+        f"{base_url}{spec.endpoint}",
+        method=spec.method,
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=spec.timeout) as response:
+            status_code = response.status
+    except urllib.error.HTTPError as exc:
+        status_code = exc.code
+    except urllib.error.URLError:
+        return False
+
+    return status_code in spec.expected_status
 
 
 def with_backoff(func, retries: int = 5, base_delay: float = 0.5) -> bool:

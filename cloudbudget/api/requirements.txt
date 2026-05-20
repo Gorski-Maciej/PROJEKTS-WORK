@@ -9,3 +9,7 @@ pydantic==2.5.0
 pydantic-settings==2.1.0
 python-dotenv==1.0.0
 httpx==0.25.2
+polars==0.20.6
+PyJWT==2.8.0
+prometheus-client==0.19.0
+strawberry-graphql==0.215.1
