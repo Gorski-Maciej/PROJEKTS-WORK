@@ -5,8 +5,13 @@ from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
-DEMO_USERNAME = os.getenv("NETAEGIS_DEMO_USERNAME", "admin")
-DEMO_PASSWORD = os.getenv("NETAEGIS_DEMO_PASSWORD", "admin")
+DEMO_USERNAME = os.getenv("NETAEGIS_DEMO_USERNAME")
+DEMO_PASSWORD = os.getenv("NETAEGIS_DEMO_PASSWORD")
+
+if not DEMO_USERNAME or not DEMO_PASSWORD:
+    raise RuntimeError("NETAEGIS_DEMO_USERNAME and NETAEGIS_DEMO_PASSWORD are required")
+if len(DEMO_PASSWORD) < 12:
+    raise RuntimeError("NETAEGIS_DEMO_PASSWORD must be at least 12 characters")
 
 
 class LoginIn(BaseModel):

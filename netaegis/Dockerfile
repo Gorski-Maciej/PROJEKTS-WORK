@@ -4,7 +4,7 @@ WORKDIR /app
 
 RUN useradd -m -u 1000 appuser
 
-COPY api/requirements.txt /app/requirements.txt
+COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY server/main_mcp/ /app/server/main_mcp/

@@ -5,10 +5,10 @@ services:
       context: .
       dockerfile: api/Dockerfile
     environment:
-      DATABASE_URL: postgresql+psycopg://cloudbudget:cloudbudget@postgres:5432/cloudbudget
+      DATABASE_URL: postgresql+psycopg2://cloudbudget:cloudbudget@postgres:5432/cloudbudget
       REDIS_URL: redis://redis:6379/0
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672//
-      JWT_SECRET: ${JWT_SECRET:-change_me_to_a_long_random_secret_min_32_chars}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       DUCKDB_PATH: /data/cloudbudget.duckdb
     ports: ["8100:8000"]
     depends_on:
@@ -33,10 +33,10 @@ services:
       dockerfile: api/Dockerfile
     command: celery -A api.core.celery_app.celery_app worker -Q cost.ingest,cost.analyze,action.exec --loglevel=INFO
     environment:
-      DATABASE_URL: postgresql+psycopg://cloudbudget:cloudbudget@postgres:5432/cloudbudget
+      DATABASE_URL: postgresql+psycopg2://cloudbudget:cloudbudget@postgres:5432/cloudbudget
       REDIS_URL: redis://redis:6379/0
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672//
-      JWT_SECRET: ${JWT_SECRET:-change_me_to_a_long_random_secret_min_32_chars}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       DUCKDB_PATH: /data/cloudbudget.duckdb
     depends_on:
       postgres:
