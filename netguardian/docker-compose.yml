@@ -92,7 +92,9 @@ services:
       SSH_AGENT_USER: root
       GEOIP_DB: /app/data/GeoLite2-City.mmdb
       SKIP_GEOIP_CHECK: ${SKIP_GEOIP_CHECK:-true}
-      JWT_SECRET: ${JWT_SECRET:-change_me_to_a_long_random_secret_min_32_chars}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      NETGUARDIAN_ADMIN_PASSWORD: ${NETGUARDIAN_ADMIN_PASSWORD:?NETGUARDIAN_ADMIN_PASSWORD is required}
+      NETGUARDIAN_VIEWER_PASSWORD: ${NETGUARDIAN_VIEWER_PASSWORD:?NETGUARDIAN_VIEWER_PASSWORD is required}
     ports:
       - "8300:8000"
     healthcheck:
@@ -108,7 +110,8 @@ services:
 
   agent:
     restart: unless-stopped
-    build: ./agent
+    build:
+      context: ./agent
     depends_on:
       kafka:
         condition: service_healthy
@@ -123,7 +126,8 @@ services:
 
   dashboard:
     restart: unless-stopped
-    build: ./dashboard
+    build:
+      context: ./dashboard
     depends_on:
       engine:
         condition: service_healthy

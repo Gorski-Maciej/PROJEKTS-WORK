@@ -20,6 +20,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8400:8000"
+    environment:
+      NETAEGIS_DEMO_USERNAME: ${NETAEGIS_DEMO_USERNAME:?NETAEGIS_DEMO_USERNAME is required}
+      NETAEGIS_DEMO_PASSWORD: ${NETAEGIS_DEMO_PASSWORD:?NETAEGIS_DEMO_PASSWORD is required}
     volumes:
       - ./data:/app/data
     depends_on:
@@ -113,8 +116,8 @@ services:
       NETCONFIG_AGENT_ID: netconfig-01
       NETCONFIG_LOCAL_REPO: /app/.agent-configs
       NETCONFIG_DEVICE_IP: 192.168.1.1
-      NETCONFIG_DEVICE_USERNAME: ${NETCONFIG_DEVICE_USERNAME}
-      NETCONFIG_DEVICE_PASSWORD: ${NETCONFIG_DEVICE_PASSWORD}
+      NETCONFIG_DEVICE_USERNAME: ${NETCONFIG_DEVICE_USERNAME:?NETCONFIG_DEVICE_USERNAME is required}
+      NETCONFIG_DEVICE_PASSWORD: ${NETCONFIG_DEVICE_PASSWORD:?NETCONFIG_DEVICE_PASSWORD is required}
     depends_on:
       operational_mcp:
         condition: service_healthy

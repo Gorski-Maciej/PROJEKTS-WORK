@@ -18,8 +18,7 @@ dependencies = [
   "scikit-learn>=1.7.0",
   "prometheus-client>=0.22.0",
   "python-jose[cryptography]>=3.3.0",
-  "passlib[bcrypt]>=1.7.4",
-  "strawberry-graphql[fastapi]>=0.275.0"
+  "passlib[bcrypt]>=1.7.4"
 ]
 
 [tool.pytest.ini_options]

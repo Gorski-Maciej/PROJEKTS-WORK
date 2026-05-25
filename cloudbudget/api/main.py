@@ -1,14 +1,34 @@
 from contextlib import asynccontextmanager
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import Column, Date, Float, Integer, String, create_engine, func, select
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+from api.core.config import settings
+from api.core.database import init_db
+
+Base = declarative_base()
+
+
+class Cost(Base):
+    __tablename__ = "costs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    service = Column(String(120), nullable=False)
+    amount = Column(Float, nullable=False)
+    date = Column(Date, nullable=False)
+
+
+engine = create_engine(settings.DATABASE_URL, future=True)
+SessionLocal = sessionmaker(bind=engine, future=True)
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    from api.core.database import init_db
-
     init_db()
+    Base.metadata.create_all(bind=engine)
     yield
 
 
@@ -25,40 +45,36 @@ def health() -> dict:
     }
 
 
-COSTS = [
-    {"id": 1, "service": "EC2", "amount": 150.0, "date": "2024-01-01"},
-    {"id": 2, "service": "RDS", "amount": 200.0, "date": "2024-01-01"},
-    {"id": 3, "service": "S3", "amount": 50.0, "date": "2024-01-01"},
-    {"id": 4, "service": "Lambda", "amount": 75.0, "date": "2024-01-02"},
-]
-
-
 @app.get("/api/v1/costs")
 def get_costs(service: str | None = None) -> list[dict]:
-    if not service:
-        return COSTS
-    return [item for item in COSTS if item["service"].lower() == service.lower()]
+    with SessionLocal() as session:
+        stmt = select(Cost)
+        if service:
+            stmt = stmt.where(func.lower(Cost.service) == service.lower())
+        rows = session.execute(stmt.order_by(Cost.date.desc(), Cost.amount.desc())).scalars().all()
+        return [{"id": r.id, "service": r.service, "amount": r.amount, "date": r.date.isoformat()} for r in rows]
 
 
 @app.get("/api/v1/costs/summary")
 def get_costs_summary() -> dict:
-    total = sum(item["amount"] for item in COSTS)
-    by_service: dict[str, float] = {}
-    for item in COSTS:
-        by_service[item["service"]] = by_service.get(item["service"], 0.0) + item["amount"]
+    with SessionLocal() as session:
+        totals = session.execute(select(func.coalesce(func.sum(Cost.amount), 0.0))).scalar_one()
+        grouped = session.execute(select(Cost.service, func.sum(Cost.amount)).group_by(Cost.service)).all()
+        start, end = session.execute(select(func.min(Cost.date), func.max(Cost.date))).one()
 
-    start = min(date.fromisoformat(item["date"]) for item in COSTS)
-    end = max(date.fromisoformat(item["date"]) for item in COSTS)
     return {
         "currency": "USD",
-        "total": round(total, 2),
-        "services": by_service,
-        "period": {"from": start.isoformat(), "to": end.isoformat()},
+        "total": round(float(totals), 2),
+        "services": {service: round(float(amount), 2) for service, amount in grouped},
+        "period": {
+            "from": start.isoformat() if start else None,
+            "to": end.isoformat() if end else None,
+        },
     }
 
 
 @app.get("/api/v1/costs/top")
-def get_top_costs(limit: int = 3) -> list[dict]:
-    safe_limit = 1 if limit < 1 else min(limit, len(COSTS))
-    ranked = sorted(COSTS, key=lambda item: item["amount"], reverse=True)
-    return ranked[:safe_limit]
+def get_top_costs(limit: int = Query(default=3, ge=1, le=100)) -> list[dict]:
+    with SessionLocal() as session:
+        rows = session.execute(select(Cost).order_by(Cost.amount.desc()).limit(limit)).scalars().all()
+        return [{"id": r.id, "service": r.service, "amount": r.amount, "date": r.date.isoformat()} for r in rows]

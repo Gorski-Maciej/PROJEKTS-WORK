@@ -40,7 +40,9 @@ services:
       REDIS_HOST: redis
       DATABASE_URL: postgresql://postgres:infraflow@timescaledb:5432/infraflow
       CONFIG_PATH: /app/config/servers.yml
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      INFRAFLOW_ADMIN_PASSWORD: ${INFRAFLOW_ADMIN_PASSWORD:?INFRAFLOW_ADMIN_PASSWORD is required}
+      INFRAFLOW_VIEWER_PASSWORD: ${INFRAFLOW_VIEWER_PASSWORD:?INFRAFLOW_VIEWER_PASSWORD is required}
     ports: ["8001:8000"]
     volumes:
       - ./engine:/app
@@ -61,7 +63,9 @@ services:
       REDIS_HOST: redis
       DATABASE_URL: postgresql://postgres:infraflow@timescaledb:5432/infraflow
       CONFIG_PATH: /app/config/servers.yml
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      INFRAFLOW_ADMIN_PASSWORD: ${INFRAFLOW_ADMIN_PASSWORD:?INFRAFLOW_ADMIN_PASSWORD is required}
+      INFRAFLOW_VIEWER_PASSWORD: ${INFRAFLOW_VIEWER_PASSWORD:?INFRAFLOW_VIEWER_PASSWORD is required}
     command: ["python","worker/queue_worker.py"]
     volumes:
       - ./engine:/app
@@ -74,7 +78,8 @@ services:
 
   dashboard:
     restart: unless-stopped
-    build: ./dashboard
+    build:
+      context: ./dashboard
     depends_on:
       engine:
         condition: service_healthy
